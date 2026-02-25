@@ -1,28 +1,30 @@
 # Blender KN5 Exporter
 
-[![CI](https://github.com/moppius/blender-assetto-corsa-tools/actions/workflows/ci.yaml/badge.svg)](https://github.com/moppius/blender-assetto-corsa-tools/actions/workflows/ci.yaml)
+This fork of the KN5 exporter is made to support the exporting of cars instead of tracks.
 
 ## Features
 
 * File format version 5
+* Export blender car -> kn5
 * Blender mesh objects as kn5 geometry
 * Blender image textures as kn5 textures
 * Set material and object settings with JSON
 * Texture mapping with UV maps or flat mapping
 * Multiple materials per object
+* Bundle texture folder
+* Utility converter for converting persistence ini -> settings file
 
+## Technical
 
-## Current Bugs & Limitations
-
-* No support for skinned meshes (needed for animations)
-* No support for AI
-* Only geometry of mesh objects will be exported
-* Only textures of type "Image" supported
-
+* Automatically search for textures defined in `settings.json`, even when they are not bound to the node in blender
+* Utility converter reads and converts persistence `fbx.ini` -> `settings.json`
+* Hardcoded texture slots to ensure proper mapping
+* Tangent space calculations ensures cars have proper reflections
+* Bounding sphere calculation updated for cars
 
 ## Requirements
-This addon is made for the latest Blender version (currently 3.0.0), others may work but are not supported.
 
+* Blender 3.0+
 
 ## Install
 
@@ -32,17 +34,14 @@ This addon is made for the latest Blender version (currently 3.0.0), others may 
 4. Click "Install..." in the top right and browse to the downloaded zip file
 5. Enable the **"Assetto Corsa (.kn5)"** addon
 
-
 ## Usage
 
-1. Set up a track scene with geometry and helpers
-   * If you don't know how to do this, there's a [good overview tutorial on the assettocorsamods.com site here](https://assettocorsamods.net/threads/build-your-first-track-basic-guide.12/)
+1. Create `settings.json` file with [utility converter](./utils/fbx_ini_to_settings_json.py)
+2. Make sure `settings.json` and the `/texture` folder are in the same directory that the `kn5` will be exported
+3. Open Blender
 3. Go to _File -> Export -> Assetto Corsa (.kn5)_
-4. Select target folder to save the track. Make sure that a valid _settings.json_ file exists
-
+4. Select directory with generated `settings.json` and export
 
 ## Notes
 
 This repository was initially created from the Blender 2.76 addon distributed as [_kn5exporter.zip_ on Thomas Hagnhofer's website](https://site.hagn.io/assettocorsa/blender-kn5-exporter).
-
-Please visit that site for a downloadable example track, and more information on the original implementation.
