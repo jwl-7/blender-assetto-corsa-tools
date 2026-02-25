@@ -185,35 +185,30 @@ class NodeWriter(KN5Writer):
         self.write_bool(node_properties.renderable) #isRenderable
 
     def _write_bounding_sphere(self, vertices):
-        max_x = -999999999
-        max_y = -999999999
-        max_z = -999999999
-        min_x = 999999999
-        min_y = 999999999
-        min_z = 999999999
-        for vertex in vertices:
-            co = vertex.co
-            if co[0] > max_x:
-                max_x = co[0]
-            if co[0] < min_x:
-                min_x = co[0]
-            if co[1] > max_y:
-                max_y = co[1]
-            if co[1] < min_y:
-                min_y = co[1]
-            if co[2] > max_z:
-                max_z = co[2]
-            if co[2] < min_z:
-                min_z = co[2]
+        if not vertices:
+            self.write_vector3((0,0,0))
+            self.write_float(0)
+            return
 
-        sphere_center = [
-            min_x + (max_x - min_x) / 2,
-            min_y + (max_y - min_y) / 2,
-            min_z + (max_z - min_z) / 2
+        min_v = [min(v.co[i] for v in vertices) for i in range(3)]
+        max_v = [max(v.co[i] for v in vertices) for i in range(3)]
+
+        center = [
+            (min_v[0] + max_v[0]) / 2,
+            (min_v[1] + max_v[1]) / 2,
+            (min_v[2] + max_v[2]) / 2
         ]
-        sphere_radius = max((max_x - min_x) / 2, (max_y - min_y) / 2, (max_z - min_z) / 2) * 2
-        self.write_vector3(sphere_center)
-        self.write_float(sphere_radius)
+
+        max_dist_sq = 0
+        for v in vertices:
+            dist_sq = sum((v.co[i] - center[i])**2 for i in range(3))
+            if dist_sq > max_dist_sq:
+                max_dist_sq = dist_sq
+
+        radius = max_dist_sq**0.5
+
+        self.write_vector3(center)
+        self.write_float(radius)
 
     def _split_object_by_materials(self, obj):
         meshes = []
@@ -257,14 +252,16 @@ class NodeWriter(KN5Writer):
                         local_position = matrix @ mesh_vertices[loop.vertex_index].co
                         converted_position = convert_vector3(local_position)
                         converted_normal = convert_vector3(loop.normal)
+                        converted_tangent = convert_vector3(loop.tangent)
+
                         uv = (0, 0)
                         if uv_layer:
                             uv = uv_layer.data[loop_index].uv
                             uv = (uv[0], -uv[1])
                         else:
                             uv = self._calculate_uvs(obj, mesh_copy, material_index, local_position)
-                        tangent = loop.tangent
-                        vertex = UvVertex(converted_position, converted_normal, uv, tangent)
+
+                        vertex = UvVertex(converted_position, converted_normal, uv, converted_tangent)
                         if vertex not in vertices:
                             new_index = len(vertices)
                             vertices[vertex] = new_index
