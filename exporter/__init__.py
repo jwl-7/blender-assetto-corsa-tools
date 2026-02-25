@@ -76,13 +76,13 @@ class CopyClipboardButtonOperator(bpy.types.Operator):
 
 
 class KN5FileWriter(KN5Writer):
-    def __init__(self, file, context, settings, warnings):
+    def __init__(self, file, context, settings, filepath, warnings):
         super().__init__(file)
 
         self.context = context
         self.settings = settings
         self.warnings = warnings
-
+        self.filepath = filepath
         self.file_version = 5
 
     def write(self):
@@ -94,7 +94,7 @@ class KN5FileWriter(KN5Writer):
         self.write_uint(self.file_version)
 
     def _write_content(self):
-        texture_writer = TextureWriter(self.file, self.context, self.warnings)
+        texture_writer = TextureWriter(self.file, self.context, self.settings, self.filepath, self.warnings)
         texture_writer.write()
         material_writer = MaterialWriter(self.file, self.context, self.settings, self.warnings)
         material_writer.write()
@@ -115,7 +115,7 @@ class ExportKN5(bpy.types.Operator, ExportHelper):
             output_file = open(self.filepath, "wb")
             try:
                 settings = read_settings(self.filepath)
-                kn5_writer = KN5FileWriter(output_file, context, settings, warnings)
+                kn5_writer = KN5FileWriter(output_file, context, settings, self.filepath, warnings)
                 kn5_writer.write()
                 bpy.ops.kn5.report_message(
                     'INVOKE_DEFAULT',
