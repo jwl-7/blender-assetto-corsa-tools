@@ -18,7 +18,6 @@ import numbers
 import os
 import re
 from .exporter_utils import (
-    get_active_material_texture_slot,
     get_texture_nodes,
 )
 from .kn5_writer import KN5Writer
@@ -34,6 +33,16 @@ MATERIAL_DEPTH_MODE = {
     "DepthNormal" : 0,
     "DepthNoWrite" : 1,
     "DepthOff" : 2,
+}
+
+AC_TEXTURE_SLOT_ID = {
+    "txDiffuse":      0,
+    "txNormal":       1,
+    "txMaps":         2,
+    "txDetail":       3,
+    "txDetailNM":     4,
+    "txEmissive":     5,
+    "txEnvironment":  6,
 }
 
 MATERIALS = "materials"
@@ -69,12 +78,14 @@ class MaterialWriter(KN5Writer):
         for property_name in material.shaderProperties:
             self._write_material_property(material.shaderProperties[property_name])
         self.write_uint(len(material.texture_mapping))
-        texture_slot = 0
+        fallback_slot = len(AC_TEXTURE_SLOT_ID)
         for mapping_name in material.texture_mapping:
+            slot_id = AC_TEXTURE_SLOT_ID.get(mapping_name, fallback_slot)
+            if mapping_name not in AC_TEXTURE_SLOT_ID:
+                fallback_slot += 1
             self.write_string(mapping_name)
-            self.write_uint(texture_slot)
+            self.write_uint(slot_id)
             self.write_string(material.texture_mapping[mapping_name])
-            texture_slot += 1
 
     def _write_material_property(self, prop):
         self.write_string(prop.name)
@@ -95,13 +106,13 @@ class MaterialWriter(KN5Writer):
             if material.users == 0:
                 self.warnings.append(f"Ignoring unused material '{material.name}'")
             elif not material.name.startswith("__"):
-                if not get_active_material_texture_slot(material):
-                    warning_message = f"No active texture for material '{material.name}' found.{os.linesep}"
-                    warning_message += "\tUsing default UV scaling for objects without UV maps."
-                    self.warnings.append(warning_message)
                 material_properties = MaterialProperties(material)
                 for setting in self.material_settings:
                     setting.apply_settings_to_material(material_properties)
+                if not material_properties.texture_mapping:
+                    warning_message = f"No active texture for material '{material.name}' found.{os.linesep}"
+                    warning_message += "\tUsing default UV scaling for objects without UV maps."
+                    self.warnings.append(warning_message)
                 self.available_materials[material.name] = material_properties
                 self.material_positions[material.name] = position
                 position += 1
@@ -154,9 +165,14 @@ class MaterialProperties:
         mapping = {}
         texture_nodes = get_texture_nodes(material)
         for texture_node in texture_nodes:
-            if not texture_node.image.name.startswith("__"):
-                shader_input = texture_node.assettoCorsa.shaderInputName
-                mapping[shader_input] = texture_node.image.name
+            if not texture_node.image:
+                continue
+            if texture_node.image.name.startswith("__"):
+                continue
+            shader_input = texture_node.assettoCorsa.shaderInputName
+            if not shader_input or not shader_input.strip():
+                continue
+            mapping[shader_input] = texture_node.image.name
         return mapping
 
 
