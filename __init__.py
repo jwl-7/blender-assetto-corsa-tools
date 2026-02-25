@@ -20,7 +20,7 @@ from .utils import register_recursive, unregister_recursive
 
 bl_info = {
     "name":        "Assetto Corsa (.kn5)",
-    "version":     (0, 2, 0),
+    "version":     (1, 0, 0),
     "author":      "Thomas Hagnhofer, Paul Greveson, JWL",
     "blender":     (3, 0, 0),
     "description": "Export to the Assetto Corsa KN5 format",
