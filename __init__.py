@@ -21,14 +21,14 @@ from .utils import register_recursive, unregister_recursive
 bl_info = {
     "name":        "Assetto Corsa (.kn5)",
     "version":     (0, 2, 0),
-    "author":      "Thomas Hagnhofer, Paul Greveson",
+    "author":      "Thomas Hagnhofer, Paul Greveson, JWL",
     "blender":     (3, 0, 0),
     "description": "Export to the Assetto Corsa KN5 format",
     "location":    "File Export menu, Object properties, Material properties",
     "support":     "COMMUNITY",
     "category":    "Import-Export",
-    "doc_url":     "https://github.com/moppius/blender-assetto-corsa-tools#readme",
-    "tracker_url": "https://github.com/moppius/blender-assetto-corsa-tools/issues",
+    "doc_url":     "https://github.com/jwl-7/blender-assetto-corsa-tools#readme",
+    "tracker_url": "https://github.com/jwl-7/blender-assetto-corsa-tools/issues",
 }
 
 
