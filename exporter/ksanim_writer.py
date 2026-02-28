@@ -2,13 +2,12 @@ import bpy
 import mathutils
 import math
 import re
-from typing import Dict, List, Set, Any, Optional, Union, Tuple
+from typing import Dict, List, Set, Any, Optional, Union
 from .exporter_utils import convert_vector3, convert_quaternion
 from .kn5_writer import KN5Writer
 
 
 NEGABONES: Set[str] = {
-    # ks driver
     'DRIVER_RIG_Leg_L',
     'DRIVER_RIG_Shin_L',
     'DRIVER_RIG_Hill_L',
@@ -43,8 +42,6 @@ NEGABONES: Set[str] = {
     'DRIVER_HAND_Ring5',
     'DRIVER_HAND_Pinkie4',
     'DRIVER_HAND_Pinkie5',
-
-    # mixamo
     'mixamorig:LeftUpLeg',
     'mixamorig:LeftLeg',
     'mixamorig:LeftFoot',
@@ -61,7 +58,6 @@ NEGABONES: Set[str] = {
     'mixamorig:RightHand'
 }
 
-# 180-degree flip matrix
 HALF_ROT_MAT: mathutils.Matrix = mathutils.Matrix.Rotation(math.pi, 4, 'X')
 
 
@@ -87,6 +83,15 @@ class KSAnimWriter(KN5Writer):
         self.warnings: List[str] = warnings
         self.objects: Dict[str, Dict[str, Any]] = {}
         self.draw_order: List[str] = []
+
+    def is_negabone(self, name: str) -> bool:
+        """Checks if bone needs orientation fix."""
+        if name in NEGABONES:
+            return True
+        if name.startswith('mixamorig'):
+            normalized_name: str = re.sub(r'mixamorig\d*:', 'mixamorig:', name)
+            return normalized_name in NEGABONES
+        return False
 
     def _add_obj(self, obj: Union[bpy.types.Object, bpy.types.PoseBone]):
         name: str = obj.name
@@ -121,18 +126,6 @@ class KSAnimWriter(KN5Writer):
         rotation: List[float] = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
         position: List[float] = list(convert_vector3(co))
         self.objects[obj.name]['frames'].append(rotation + position + [scale[0], scale[2], scale[1]])
-
-    def is_negabone(self, name: str) -> bool:
-        """Checks if bone needs orientation fix."""
-        if name in NEGABONES:
-            return True
-
-        # check for mixamorig + any number affix that may follow | ex: mixamorig7
-        if name.startswith('mixamorig'):
-            normalized_name: str = re.sub(r'mixamorig\d*:', 'mixamorig:', name)
-            return normalized_name in NEGABONES
-
-        return False
 
     def write(self):
         scene: bpy.types.Scene = self.context.scene
@@ -199,6 +192,7 @@ class KSAnimWriter(KN5Writer):
             for frame in obj_data['frames']:
                 self.write_list(frame)
 
+
 class KNHWriter(KN5Writer):
     """Writer for AC 3D Pose (.knh) files."""
 
@@ -222,12 +216,9 @@ class KNHWriter(KN5Writer):
         """Checks if bone needs orientation fix."""
         if name in NEGABONES:
             return True
-
-        # check for mixamorig + any number affix that may follow | ex: mixamorig7
         if name.startswith('mixamorig'):
             normalized_name: str = re.sub(r'mixamorig\d*:', 'mixamorig:', name)
             return normalized_name in NEGABONES
-
         return False
 
     def write(self):
