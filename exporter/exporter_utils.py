@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Dict, Optional, Any
+from typing import Any
 import bpy
 from mathutils import Matrix, Quaternion, Vector
 
@@ -39,9 +39,9 @@ def convert_quaternion(in_quat: Quaternion) -> Quaternion:
     return Quaternion(axis, angle)
 
 
-def get_texture_nodes(material: bpy.types.Material) -> List[bpy.types.ShaderNodeTexImage]:
+def get_texture_nodes(material: bpy.types.Material) -> list[bpy.types.ShaderNodeTexImage]:
     """Retrieves all image texture nodes from a material."""
-    texture_nodes: List[bpy.types.ShaderNodeTexImage] = []
+    texture_nodes: list[bpy.types.ShaderNodeTexImage] = []
     if material.node_tree:
         for node in material.node_tree.nodes:
             if isinstance(node, bpy.types.ShaderNodeTexImage):
@@ -49,9 +49,9 @@ def get_texture_nodes(material: bpy.types.Material) -> List[bpy.types.ShaderNode
     return texture_nodes
 
 
-def get_all_texture_nodes(context: bpy.types.Context) -> List[bpy.types.ShaderNodeTexImage]:
+def get_all_texture_nodes(context: bpy.types.Context) -> list[bpy.types.ShaderNodeTexImage]:
     """Aggregates all texture nodes used by meshes in the blend data."""
-    scene_texture_nodes: List[bpy.types.ShaderNodeTexImage] = []
+    scene_texture_nodes: list[bpy.types.ShaderNodeTexImage] = []
     for obj in context.blend_data.objects:
         if obj.type != 'MESH':
             continue
@@ -61,22 +61,20 @@ def get_all_texture_nodes(context: bpy.types.Context) -> List[bpy.types.ShaderNo
     return scene_texture_nodes
 
 
-def get_active_material_texture_slot(material: bpy.types.Material) -> Optional[bpy.types.ShaderNodeTexImage]:
+def get_active_material_texture_slot(material: bpy.types.Material) -> bpy.types.ShaderNodeTexImage | None:
     """Returns the first visible texture node in a material."""
-    texture_nodes: List[bpy.types.ShaderNodeTexImage] = get_texture_nodes(material)
+    texture_nodes: list[bpy.types.ShaderNodeTexImage] = get_texture_nodes(material)
     for texture_node in texture_nodes:
         if texture_node.show_texture:
             return texture_node
     return None
 
 
-def read_settings(file: str) -> Dict[str, Any]:
+def read_settings(file: str) -> dict[str, Any]:
     """Reads settings.json relative to the export file path."""
     full_path: str = os.path.abspath(file)
     dir_name: str = os.path.dirname(full_path)
     settings_path: str = os.path.join(dir_name, 'settings.json')
     if not os.path.exists(settings_path):
         return {}
-
-    with open(settings_path, 'r') as f:
-        return json.loads(f.read())
+    return json.loads(open(settings_path, 'r').read())

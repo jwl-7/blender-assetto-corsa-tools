@@ -1,7 +1,7 @@
 import traceback
 import os
 import bpy
-from typing import List, Any, Dict, Optional, Set
+from typing import Any
 from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy_extras.io_utils import ExportHelper
 from .exporter_utils import read_settings
@@ -68,14 +68,14 @@ class KN5FileWriter(KN5Writer):
         self,
         file: Any,
         context: bpy.types.Context,
-        settings: Dict[str, Any],
+        settings: dict[str, Any],
         filepath: str,
-        warnings: List[str]
+        warnings: list[str]
     ):
         super().__init__(file)
         self.context: bpy.types.Context = context
-        self.settings: Dict[str, Any] = settings
-        self.warnings: List[str] = warnings
+        self.settings: dict[str, Any] = settings
+        self.warnings: list[str] = warnings
         self.filepath: str = filepath
         self.file_version: int = 5
 
@@ -114,10 +114,10 @@ class ExportKN5(bpy.types.Operator, ExportHelper):
     filename_ext = '.kn5'
 
     def execute(self, context: bpy.types.Context) -> set:
-        warnings: List[str] = []
+        warnings: list[str] = []
         try:
             with open(self.filepath, 'wb') as f:
-                settings: Dict[str, Any] = read_settings(self.filepath)
+                settings: dict[str, Any] = read_settings(self.filepath)
                 KN5FileWriter(
                     f,
                     context,
@@ -135,7 +135,7 @@ class ExportKN5(bpy.types.Operator, ExportHelper):
             error: str = traceback.format_exc()
             try:
                 os.remove(self.filepath)
-            except:
+            except Exception as _:
                 pass
             bpy.ops.kn5.report_message(
                 'INVOKE_DEFAULT',
@@ -174,7 +174,7 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
         layout.prop(self, 'export_base_pos')
 
     def execute(self, context: bpy.types.Context) -> set:
-        warnings: List[str] = []
+        warnings: list[str] = []
         try:
             with open(self.filepath, 'wb') as f:
                 if self.export_base_pos:
@@ -206,7 +206,7 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
             error: str = traceback.format_exc()
             try:
                 os.remove(self.filepath)
-            except:
+            except Exception as _:
                 pass
             bpy.ops.kn5.report_message(
                 'INVOKE_DEFAULT',

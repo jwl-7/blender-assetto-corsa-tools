@@ -1,5 +1,5 @@
 import bpy
-from typing import Any, List
+from typing import Any
 from bpy.props import (
     BoolProperty,
     CollectionProperty,
@@ -12,7 +12,7 @@ from bpy.props import (
 from ..exporter import material_writer
 
 
-def convert_dict_to_blender_enum(dictionary: dict) -> List[tuple]:
+def convert_dict_to_blender_enum(dictionary: dict) -> list[tuple]:
     """Converts a dictionary into a list of tuples for Blender EnumProperty."""
     items = []
     for key in dictionary:

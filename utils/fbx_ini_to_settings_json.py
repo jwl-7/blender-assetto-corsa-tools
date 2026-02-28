@@ -9,9 +9,9 @@ import os
 import re
 import tkinter as tk
 from tkinter import filedialog
-from typing import Any, Dict, Tuple
+from typing import Any
 
-def _parse_ini(filepath: str) -> Dict[str, Dict[str, str]]:
+def _parse_ini(filepath: str) -> dict[str, dict[str, str]]:
     """Parses an INI file into a nested dictionary structure."""
     sections = {}
     current = None
@@ -35,7 +35,7 @@ def parse_float(s: Any) -> float:
     except (ValueError, AttributeError):
         return 0.0
 
-def parse_floatn(s: str, n: int) -> Tuple[float, ...]:
+def parse_floatn(s: str, n: int) -> tuple[float, ...]:
     """Parses a comma-separated string into a tuple of n floats."""
     parts = [p.strip() for p in s.split(',')]
     result = []
@@ -46,11 +46,11 @@ def parse_floatn(s: str, n: int) -> Tuple[float, ...]:
             result.append(0.0)
     return tuple(result)
 
-def get_bool(data: Dict[str, str], key: str, default: bool) -> bool:
+def get_bool(data: dict[str, str], key: str, default: bool) -> bool:
     """Extracts a boolean value from a dictionary based on common string representations."""
     return data.get(key, str(default)).lower() in ('1', 'true', 'yes')
 
-def convert_sections_to_json(sections: Dict[str, Dict[str, str]]) -> Dict[str, Any]:
+def convert_sections_to_json(sections: dict[str, dict[str, str]]) -> dict[str, Any]:
     """Converts INI section data into a structured dictionary for JSON export."""
     data = {'materials': {}, 'nodes': {}}
     applied_mats = 0

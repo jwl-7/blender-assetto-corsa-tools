@@ -2,12 +2,12 @@ import bpy
 import mathutils
 import math
 import re
-from typing import Dict, List, Set, Any, Optional, Union
+from typing import Any
 from .exporter_utils import convert_vector3, convert_quaternion
 from .kn5_writer import KN5Writer
 
 
-NEGABONES: Set[str] = {
+NEGABONES: set[str] = {
     'DRIVER_RIG_Leg_L',
     'DRIVER_RIG_Shin_L',
     'DRIVER_RIG_Hill_L',
@@ -72,7 +72,7 @@ class KSAnimWriter(KN5Writer):
         selection_type: str,
         reverse_animation: bool,
         add_colons: bool,
-        warnings: List[str]
+        warnings: list[str]
     ):
         super().__init__(file)
         self.context: bpy.types.Context = context
@@ -80,9 +80,9 @@ class KSAnimWriter(KN5Writer):
         self.selection_type: str = selection_type
         self.reverse_animation: bool = reverse_animation
         self.add_colons: bool = add_colons
-        self.warnings: List[str] = warnings
-        self.objects: Dict[str, Dict[str, Any]] = {}
-        self.draw_order: List[str] = []
+        self.warnings: list[str] = warnings
+        self.objects: dict[str, dict[str, Any]] = {}
+        self.draw_order: list[str] = []
 
     def is_negabone(self, name: str) -> bool:
         """Checks if bone needs orientation fix."""
@@ -93,7 +93,7 @@ class KSAnimWriter(KN5Writer):
             return normalized_name in NEGABONES
         return False
 
-    def _add_obj(self, obj: Union[bpy.types.Object, bpy.types.PoseBone]):
+    def _add_obj(self, obj: bpy.types.Object | bpy.types.PoseBone):
         name: str = obj.name
         if self.add_colons and name.startswith('DRIVER_'):
             name = 'DRIVER:' + name[7:]
@@ -106,8 +106,8 @@ class KSAnimWriter(KN5Writer):
         scale: mathutils.Vector
         co, rot, scale = obj.matrix_local.decompose()
 
-        rotation: List[float] = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
-        position: List[float] = list(convert_vector3(co))
+        rotation: list[float] = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
+        position: list[float] = list(convert_vector3(co))
         self.objects[obj.name]['frames'].append(rotation + position + [scale[0], scale[2], scale[1]])
 
     def _add_bone_frame(self, obj: bpy.types.PoseBone):
@@ -123,15 +123,15 @@ class KSAnimWriter(KN5Writer):
         scale: mathutils.Vector
         co, rot, scale = local_mat.decompose()
 
-        rotation: List[float] = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
-        position: List[float] = list(convert_vector3(co))
+        rotation: list[float] = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
+        position: list[float] = list(convert_vector3(co))
         self.objects[obj.name]['frames'].append(rotation + position + [scale[0], scale[2], scale[1]])
 
     def write(self):
         scene: bpy.types.Scene = self.context.scene
         layer: bpy.types.ViewLayer = self.context.view_layer
-        context_objects: List[bpy.types.Object] = []
-        context_bones: List[bpy.types.PoseBone] = []
+        context_objects: list[bpy.types.Object] = []
+        context_bones: list[bpy.types.PoseBone] = []
 
         if self.selection_type == 'use_pose_bones':
             context_bones = list(self.context.selected_pose_bones) if self.context.selected_pose_bones else []
@@ -150,7 +150,7 @@ class KSAnimWriter(KN5Writer):
         for bone in context_bones:
             self._add_obj(bone)
 
-        original_actions: Dict[bpy.types.Object, Optional[bpy.types.Action]] = {}
+        original_actions: dict[bpy.types.Object, bpy.types.Action | None] = {}
         for obj in context_objects:
             if obj.type == 'ARMATURE':
                 if not obj.animation_data:
@@ -186,7 +186,7 @@ class KSAnimWriter(KN5Writer):
         self.write_uint(2)
         self.write_uint(len(self.objects))
         for o in self.draw_order:
-            obj_data: Dict[str, Any] = self.objects[o]
+            obj_data: dict[str, Any] = self.objects[o]
             self.write_string(obj_data['name'])
             self.write_uint(len(obj_data['frames']))
             for frame in obj_data['frames']:
@@ -203,14 +203,14 @@ class KNHWriter(KN5Writer):
         filepath: str,
         selection_type: str,
         add_colons: bool,
-        warnings: List[str]
+        warnings: list[str]
     ):
         super().__init__(file)
         self.context: bpy.types.Context = context
         self.filepath: str = filepath
         self.selection_type: str = selection_type
         self.add_colons: bool = add_colons
-        self.warnings: List[str] = warnings
+        self.warnings: list[str] = warnings
 
     def is_negabone(self, name: str) -> bool:
         """Checks if bone needs orientation fix."""
@@ -222,7 +222,7 @@ class KNHWriter(KN5Writer):
         return False
 
     def write(self):
-        objs: List[bpy.types.Object] = list(self.context.selected_objects) if self.selection_type == 'use_selection' else list(self.context.view_layer.objects)
+        objs: list[bpy.types.Object] = list(self.context.selected_objects) if self.selection_type == 'use_selection' else list(self.context.view_layer.objects)
         for o in objs:
             if not o.parent:
                 self._write_recursive_knh_obj(o)
@@ -234,9 +234,9 @@ class KNHWriter(KN5Writer):
         mat: mathutils.Matrix = obj.matrix_local if obj.parent else (obj.matrix_local @ mathutils.Matrix.Rotation(-math.pi/2, 4, 'X'))
         self.write_matrix(mat)
 
-        children: List[bpy.types.Object] = list(obj.children)
+        children: list[bpy.types.Object] = list(obj.children)
         if obj.type == 'ARMATURE' and obj.pose:
-            rootbones: List[bpy.types.PoseBone] = [b for b in obj.pose.bones if not b.parent]
+            rootbones: list[bpy.types.PoseBone] = [b for b in obj.pose.bones if not b.parent]
             self.write_uint(len(rootbones) + len(children))
             for b in rootbones:
                 self._write_recursive_knh_bone(b)
@@ -257,7 +257,7 @@ class KNHWriter(KN5Writer):
         else:
             self.write_matrix(mat)
 
-        bone_children: List[bpy.types.PoseBone] = list(bone.children)
+        bone_children: list[bpy.types.PoseBone] = list(bone.children)
         self.write_uint(len(bone_children))
         for b in bone_children:
             self._write_recursive_knh_bone(b)

@@ -1,7 +1,7 @@
 import os
 import re
 import bmesh
-from typing import Dict, List, Any, Optional, Set
+from typing import Any
 from mathutils import Matrix, Vector
 from .exporter_utils import (
     convert_matrix,
@@ -14,7 +14,7 @@ from ..utils.constants import ASSETTO_CORSA_OBJECTS
 
 NODES: str = 'nodes'
 
-NODE_CLASS: Dict[str, int] = {
+NODE_CLASS: dict[str, int] = {
     'Node': 1,
     'Mesh': 2,
     'SkinnedMesh': 3,
@@ -36,19 +36,19 @@ class NodeWriter(KN5Writer):
         self,
         file: Any,
         context: Any,
-        settings: Dict[str, Any],
-        warnings: List[str],
+        settings: dict[str, Any],
+        warnings: list[str],
         material_writer: Any
     ):
         super().__init__(file)
 
         self.context: Any = context
-        self.settings: Dict[str, Any] = settings
-        self.warnings: List[str] = warnings
+        self.settings: dict[str, Any] = settings
+        self.warnings: list[str] = warnings
         self.material_writer: Any = material_writer
         self.scene: Any = self.context.scene
-        self.node_settings: List['NodeSettings'] = []
-        self.ac_objects: List[re.Pattern] = []
+        self.node_settings: list['NodeSettings'] = []
+        self.ac_objects: list[re.Pattern] = []
         self._init_assetto_corsa_objects()
         self._init_node_settings()
 
@@ -91,9 +91,9 @@ class NodeWriter(KN5Writer):
                 return True
         return False
 
-    def _write_base_node(self, obj: Optional[Any], node_name: str):
-        node_data: Dict[str, Any] = {}
-        matrix: Optional[Matrix] = None
+    def _write_base_node(self, obj: Any | None, node_name: str):
+        node_data: dict[str, Any] = {}
+        matrix: Matrix | None = None
         num_children: int = 0
         if not obj:
             matrix = Matrix()
@@ -116,7 +116,7 @@ class NodeWriter(KN5Writer):
         node_data['transform'] = matrix
         self._write_base_node_data(node_data)
 
-    def _write_base_node_data(self, node_data: Dict[str, Any]):
+    def _write_base_node_data(self, node_data: dict[str, Any]):
         self._write_node_class('Node')
         self.write_string(node_data['name'])
         self.write_uint(node_data['childCount'])
@@ -124,10 +124,10 @@ class NodeWriter(KN5Writer):
         self.write_matrix(node_data['transform'])
 
     def _write_mesh_node(self, obj: Any):
-        divided_meshes: List['Mesh'] = self._split_object_by_materials(obj)
+        divided_meshes: list['Mesh'] = self._split_object_by_materials(obj)
         divided_meshes = self._split_meshes_for_vertex_limit(divided_meshes)
         if obj.parent or len(divided_meshes) > 1:
-            node_data: Dict[str, Any] = {}
+            node_data: dict[str, Any] = {}
             node_data['name'] = obj.name
             node_data['childCount'] = len(divided_meshes)
             node_data['active'] = True
@@ -181,16 +181,16 @@ class NodeWriter(KN5Writer):
         self._write_bounding_sphere(mesh.vertices)
         self.write_bool(node_properties.renderable)
 
-    def _write_bounding_sphere(self, vertices: List['UvVertex']):
+    def _write_bounding_sphere(self, vertices: list['UvVertex']):
         if not vertices:
             self.write_vector3((0, 0, 0))
             self.write_float(0)
             return
 
-        min_v: List[float] = [min(v.co[i] for v in vertices) for i in range(3)]
-        max_v: List[float] = [max(v.co[i] for v in vertices) for i in range(3)]
+        min_v: list[float] = [min(v.co[i] for v in vertices) for i in range(3)]
+        max_v: list[float] = [max(v.co[i] for v in vertices) for i in range(3)]
 
-        center: List[float] = [
+        center: list[float] = [
             (min_v[0] + max_v[0]) / 2,
             (min_v[1] + max_v[1]) / 2,
             (min_v[2] + max_v[2]) / 2
@@ -207,8 +207,8 @@ class NodeWriter(KN5Writer):
         self.write_vector3(center)
         self.write_float(radius)
 
-    def _split_object_by_materials(self, obj: Any) -> List['Mesh']:
-        meshes: List['Mesh'] = []
+    def _split_object_by_materials(self, obj: Any) -> list['Mesh']:
+        meshes: list['Mesh'] = []
         mesh_copy: Any = obj.to_mesh()
 
         bm: Any = bmesh.new()
@@ -220,16 +220,16 @@ class NodeWriter(KN5Writer):
         try:
             mesh_copy.calc_loop_triangles()
             mesh_copy.calc_tangents()
-            mesh_vertices: List[Any] = mesh_copy.vertices[:]
-            mesh_loops: List[Any] = mesh_copy.loops[:]
-            mesh_triangles: List[Any] = mesh_copy.loop_triangles[:]
+            mesh_vertices: list[Any] = mesh_copy.vertices[:]
+            mesh_loops: list[Any] = mesh_copy.loops[:]
+            mesh_triangles: list[Any] = mesh_copy.loop_triangles[:]
             uv_layer: Any = mesh_copy.uv_layers.active
             matrix: Matrix = obj.matrix_world
 
             if not mesh_copy.materials:
                 raise Exception(f"Object '{obj.name}' has no material assigned")
 
-            used_materials: Set[int] = set([triangle.material_index for triangle in mesh_triangles])
+            used_materials: set[int] = set([triangle.material_index for triangle in mesh_triangles])
             for material_index in used_materials:
                 if not mesh_copy.materials[material_index]:
                     raise Exception(f"Material slot {material_index} for object '{obj.name}' has no material assigned")
@@ -237,13 +237,13 @@ class NodeWriter(KN5Writer):
                 if material_name.startswith('__'):
                     raise Exception(f"Material '{material_name}' is ignored but is used by object '{obj.name}'")
 
-                vertices: Dict['UvVertex', int] = {}
-                indices: List[int] = []
+                vertices: dict['UvVertex', int] = {}
+                indices: list[int] = []
                 for triangle in mesh_triangles:
                     if material_index != triangle.material_index:
                         continue
                     vertex_index_for_face: int = 0
-                    face_indices: List[int] = []
+                    face_indices: list[int] = []
                     for loop_index in triangle.loops:
                         loop: Any = mesh_loops[loop_index]
                         local_position: Vector = matrix @ mesh_vertices[loop.vertex_index].co
@@ -267,25 +267,25 @@ class NodeWriter(KN5Writer):
                     indices.extend((face_indices[1], face_indices[2], face_indices[0]))
                     if len(face_indices) == 4:
                         indices.extend((face_indices[2], face_indices[3], face_indices[0]))
-                vertices_list: List['UvVertex'] = [v for v, index in sorted(vertices.items(), key=lambda k: k[1])]
+                vertices_list: list['UvVertex'] = [v for v, index in sorted(vertices.items(), key=lambda k: k[1])]
                 material_id: int = self.material_writer.material_positions[material_name]
                 meshes.append(Mesh(material_id, vertices_list, indices))
         finally:
             obj.to_mesh_clear()
         return meshes
 
-    def _split_meshes_for_vertex_limit(self, divided_meshes: List['Mesh']) -> List['Mesh']:
-        new_meshes: List['Mesh'] = []
+    def _split_meshes_for_vertex_limit(self, divided_meshes: list['Mesh']) -> list['Mesh']:
+        new_meshes: list['Mesh'] = []
         limit: int = 2**16
         for mesh in divided_meshes:
             if len(mesh.vertices) > limit:
                 start_index: int = 0
                 while start_index < len(mesh.indices):
-                    vertex_index_mapping: Dict[int, int] = {}
-                    new_indices: List[int] = []
+                    vertex_index_mapping: dict[int, int] = {}
+                    new_indices: list[int] = []
                     for i in range(start_index, len(mesh.indices), 3):
                         start_index += 3
-                        face: List[int] = mesh.indices[i:i+3]
+                        face: list[int] = mesh.indices[i:i+3]
                         for face_index in face:
                             if face_index not in vertex_index_mapping:
                                 new_index: int = len(vertex_index_mapping)
@@ -293,7 +293,7 @@ class NodeWriter(KN5Writer):
                             new_indices.append(vertex_index_mapping[face_index])
                         if len(vertex_index_mapping) >= limit - 3:
                             break
-                    verts: List['UvVertex'] = [mesh.vertices[v] for v, index in sorted(vertex_index_mapping.items(), key=lambda k: k[1])]
+                    verts: list['UvVertex'] = [mesh.vertices[v] for v, index in sorted(vertex_index_mapping.items(), key=lambda k: k[1])]
                     new_meshes.append(Mesh(mesh.material_id, verts, new_indices))
             else:
                 new_meshes.append(mesh)
@@ -335,12 +335,12 @@ class NodeProperties:
 class NodeSettings:
     def __init__(
         self,
-        settings: Dict[str, Any],
+        settings: dict[str, Any],
         node_settings_key: str
     ):
-        self._settings: Dict[str, Any] = settings
+        self._settings: dict[str, Any] = settings
         self._node_settings_key: str = node_settings_key
-        self._node_name_matches: List[re.Pattern] = self._convert_to_matches_list(node_settings_key)
+        self._node_name_matches: list[re.Pattern] = self._convert_to_matches_list(node_settings_key)
 
     def apply_settings_to_node(self, node: NodeProperties):
         if not self._does_node_name_match(node.name):
@@ -356,8 +356,8 @@ class NodeSettings:
                 return True
         return False
 
-    def _convert_to_matches_list(self, key: str) -> List[re.Pattern]:
-        matches: List[re.Pattern] = []
+    def _convert_to_matches_list(self, key: str) -> list[re.Pattern]:
+        matches: list[re.Pattern] = []
         for subkey in key.split('|'):
             matches.append(re.compile(f'^{self._escape_match_key(subkey)}$', re.IGNORECASE))
         return matches
@@ -369,7 +369,7 @@ class NodeSettings:
         key = key.replace(wildcard_replacement, '.*')
         return key
 
-    def _get_node_setting(self, setting: str) -> Optional[Any]:
+    def _get_node_setting(self, setting: str) -> Any | None:
         if setting in self._settings[NODES][self._node_settings_key]:
             return self._settings[NODES][self._node_settings_key][setting]
         return None
@@ -381,7 +381,7 @@ class UvVertex:
         self.normal: Vector = normal
         self.uv: tuple = uv
         self.tangent: Vector = tangent
-        self.hash: Optional[int] = None
+        self.hash: int | None = None
 
     def __hash__(self) -> int:
         if not self.hash:
@@ -420,9 +420,9 @@ class Mesh:
     def __init__(
         self,
         material_id: int,
-        vertices: List[UvVertex],
-        indices: List[int]
+        vertices: list[UvVertex],
+        indices: list[int]
     ):
         self.material_id: int = material_id
-        self.vertices: List[UvVertex] = vertices
-        self.indices: List[int] = indices
+        self.vertices: list[UvVertex] = vertices
+        self.indices: list[int] = indices

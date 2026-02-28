@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List
+from typing import Any
 import bpy
 from .kn5_writer import KN5Writer
 from .exporter_utils import get_all_texture_nodes
@@ -13,17 +13,17 @@ class TextureWriter(KN5Writer):
         self,
         file: Any,
         context: bpy.types.Context,
-        settings: Dict[str, Any],
+        settings: dict[str, Any],
         filepath: str,
-        warnings: List[str]
+        warnings: list[str]
     ):
         super().__init__(file)
 
-        self.available_textures: Dict[str, Any] = {}
-        self.texture_positions: Dict[str, int] = {}
-        self.warnings: List[str] = warnings
+        self.available_textures: dict[str, Any] = {}
+        self.texture_positions: dict[str, int] = {}
+        self.warnings: list[str] = warnings
         self.context: bpy.types.Context = context
-        self.settings: Dict[str, Any] = settings
+        self.settings: dict[str, Any] = settings
         self.textures_dir: str = os.path.join(os.path.dirname(os.path.abspath(filepath)), 'texture')
         self._fill_available_image_textures()
         self._fill_textures_from_settings()
@@ -60,7 +60,7 @@ class TextureWriter(KN5Writer):
         self.texture_positions = {}
         position: int = 0
 
-        all_texture_nodes: List[bpy.types.ShaderNodeTexImage] = get_all_texture_nodes(self.context)
+        all_texture_nodes: list[bpy.types.ShaderNodeTexImage] = get_all_texture_nodes(self.context)
         for texture_node in all_texture_nodes:
             if texture_node.name.startswith('__'):
                 continue
