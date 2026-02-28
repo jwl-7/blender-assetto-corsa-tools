@@ -88,14 +88,14 @@ class KSAnimWriter(KN5Writer):
         self.objects: Dict[str, Dict[str, Any]] = {}
         self.draw_order: List[str] = []
 
-    def _add_obj(self, obj: Union[bpy.types.Object, bpy.types.PoseBone]) -> None:
+    def _add_obj(self, obj: Union[bpy.types.Object, bpy.types.PoseBone]):
         name: str = obj.name
         if self.add_colons and name.startswith('DRIVER_'):
             name = 'DRIVER:' + name[7:]
         self.objects[obj.name] = {'name': name, 'frames': []}
         self.draw_order.append(obj.name)
 
-    def _add_frame(self, obj: bpy.types.Object) -> None:
+    def _add_frame(self, obj: bpy.types.Object):
         co: mathutils.Vector
         rot: mathutils.Quaternion
         scale: mathutils.Vector
@@ -105,7 +105,7 @@ class KSAnimWriter(KN5Writer):
         position: List[float] = list(convert_vector3(co))
         self.objects[obj.name]['frames'].append(rotation + position + [scale[0], scale[2], scale[1]])
 
-    def _add_bone_frame(self, obj: bpy.types.PoseBone) -> None:
+    def _add_bone_frame(self, obj: bpy.types.PoseBone):
         mat: mathutils.Matrix = obj.matrix @ HALF_ROT_MAT if self.is_negabone(obj.name) else obj.matrix
         if obj.parent:
             pmat: mathutils.Matrix = obj.parent.matrix @ HALF_ROT_MAT if self.is_negabone(obj.parent.name) else obj.parent.matrix
@@ -134,7 +134,7 @@ class KSAnimWriter(KN5Writer):
 
         return False
 
-    def write(self) -> None:
+    def write(self):
         scene: bpy.types.Scene = self.context.scene
         layer: bpy.types.ViewLayer = self.context.view_layer
         context_objects: List[bpy.types.Object] = []
@@ -230,13 +230,13 @@ class KNHWriter(KN5Writer):
 
         return False
 
-    def write(self) -> None:
+    def write(self):
         objs: List[bpy.types.Object] = list(self.context.selected_objects) if self.selection_type == 'use_selection' else list(self.context.view_layer.objects)
         for o in objs:
             if not o.parent:
                 self._write_recursive_knh_obj(o)
 
-    def _write_recursive_knh_obj(self, obj: bpy.types.Object) -> None:
+    def _write_recursive_knh_obj(self, obj: bpy.types.Object):
         name: str = 'DRIVER:' + obj.name[7:] if self.add_colons and obj.name.startswith('DRIVER_') else obj.name
         self.write_string(name)
 
@@ -255,7 +255,7 @@ class KNHWriter(KN5Writer):
         for o in children:
             self._write_recursive_knh_obj(o)
 
-    def _write_recursive_knh_bone(self, bone: bpy.types.PoseBone) -> None:
+    def _write_recursive_knh_bone(self, bone: bpy.types.PoseBone):
         name: str = 'DRIVER:' + bone.name[7:] if self.add_colons and bone.name.startswith('DRIVER_') else bone.name
         self.write_string(name)
 
