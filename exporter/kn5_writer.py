@@ -62,3 +62,7 @@ class KN5Writer():
         for row in range(4):
             for col in range(4):
                 self.write_float(matrix[col][row])
+
+    def write_list(self, L):
+        for float_val in L:
+            self.write_float(float_val)

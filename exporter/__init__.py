@@ -2,28 +2,18 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright (C) 2014  Thomas Hagnhofer
-
 
 import traceback
 import os
 import bpy
-from bpy.props import BoolProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy_extras.io_utils import ExportHelper
 from .exporter_utils import read_settings
 from .kn5_writer import KN5Writer
 from .texture_writer import TextureWriter
 from .material_writer import MaterialWriter
 from .node_writer import NodeWriter
+from .ksanim_writer import KSAnimWriter, KNHWriter
 from ..utils.constants import KN5_HEADER_BYTES
 
 
@@ -78,89 +68,97 @@ class CopyClipboardButtonOperator(bpy.types.Operator):
 class KN5FileWriter(KN5Writer):
     def __init__(self, file, context, settings, filepath, warnings):
         super().__init__(file)
-
-        self.context = context
-        self.settings = settings
-        self.warnings = warnings
-        self.filepath = filepath
+        self.context, self.settings, self.warnings, self.filepath = context, settings, warnings, filepath
         self.file_version = 5
 
     def write(self):
-        self._write_header()
-        self._write_content()
-
-    def _write_header(self):
         self.file.write(KN5_HEADER_BYTES)
         self.write_uint(self.file_version)
-
-    def _write_content(self):
-        texture_writer = TextureWriter(self.file, self.context, self.settings, self.filepath, self.warnings)
-        texture_writer.write()
+        TextureWriter(self.file, self.context, self.settings, self.filepath, self.warnings).write()
         material_writer = MaterialWriter(self.file, self.context, self.settings, self.warnings)
         material_writer.write()
-        node_writer = NodeWriter(self.file, self.context, self.settings, self.warnings, material_writer)
-        node_writer.write()
+        NodeWriter(self.file, self.context, self.settings, self.warnings, material_writer).write()
 
 
 class ExportKN5(bpy.types.Operator, ExportHelper):
+    """Export to Assetto Corsa 3D object format (.kn5)"""
+
     bl_idname = "exporter.kn5"
     bl_label = "Export KN5"
-    bl_description = "Export KN5"
-
     filename_ext = ".kn5"
 
     def execute(self, context):
         warnings = []
         try:
-            output_file = open(self.filepath, "wb")
-            try:
+            with open(self.filepath, "wb") as f:
                 settings = read_settings(self.filepath)
-                kn5_writer = KN5FileWriter(output_file, context, settings, self.filepath, warnings)
-                kn5_writer.write()
-                bpy.ops.kn5.report_message(
-                    'INVOKE_DEFAULT',
-                    is_error=False,
-                    title="Exported successfully",
-                    message=os.linesep.join(warnings)
-                )
-            finally:
-                if not output_file is None:
-                    output_file.close()
-        except: # pylint: disable=bare-except
+                KN5FileWriter(f, context, settings, self.filepath, warnings).write()
+                bpy.ops.kn5.report_message('INVOKE_DEFAULT', is_error=False, title="Exported successfully", message=os.linesep.join(warnings))
+        except:
             error = traceback.format_exc()
-            try:
-                # Remove output file so we can't crash the engine with a broken file
-                os.remove(self.filepath)
-            except: # pylint: disable=bare-except
-                pass
-            warnings.append(error)
-            bpy.ops.kn5.report_message(
-                'INVOKE_DEFAULT',
-                is_error=True,
-                title="Export failed",
-                message=os.linesep.join(warnings)
-            )
+            try: os.remove(self.filepath)
+            except: pass
+            bpy.ops.kn5.report_message('INVOKE_DEFAULT', is_error=True, title="Export failed", message=error)
+        return {'FINISHED'}
+
+
+class ExportKSAnim(bpy.types.Operator, ExportHelper):
+    """Export to Assetto Corsa animation format (.ksanim)"""
+
+    bl_idname = "exporter.ksanim"
+    bl_label = "Export KSANIM"
+    filename_ext = ".ksanim"
+    filter_glob: StringProperty(default="*.ksanim;*.knh", options={"HIDDEN"})
+
+    selection_type: EnumProperty(
+        items=(
+            ("use_all", "All Objects", "Export all visible objects"),
+            ("use_selection", "Selected Objects", "Export selected objects"),
+            ("use_pose_bones", "Selected Bones", "Export selected bones"),
+        ),
+        name="Use", default="use_all"
+    )
+    reverse_animation: BoolProperty(name="Reverse Animation", default=False)
+    add_colons: BoolProperty(name="Fix DRIVER: Objects", default=False)
+    export_base_pos: BoolProperty(name="Export driver_base_pos.knh", default=False)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "selection_type")
+        layout.prop(self, "reverse_animation")
+        layout.prop(self, "add_colons")
+        layout.prop(self, "export_base_pos")
+
+    def execute(self, context):
+        warnings = []
+        try:
+            with open(self.filepath, "wb") as f:
+                if self.export_base_pos:
+                    KNHWriter(f, context, self.filepath, self.selection_type, self.add_colons, warnings).write()
+                else:
+                    KSAnimWriter(f, context, self.filepath, self.selection_type, self.reverse_animation, self.add_colons, warnings).write()
+            bpy.ops.kn5.report_message('INVOKE_DEFAULT', is_error=False, title="Exported successfully", message=os.linesep.join(warnings))
+        except:
+            error = traceback.format_exc()
+            try: os.remove(self.filepath)
+            except: pass
+            bpy.ops.kn5.report_message('INVOKE_DEFAULT', is_error=True, title="Export failed", message=error)
         return {'FINISHED'}
 
 
 def menu_func(self, context):
-    self.layout.operator(ExportKN5.bl_idname, text="Assetto Corsa (.kn5)")
+    self.layout.operator(ExportKN5.bl_idname, text="AC 3D (.kn5)")
+    self.layout.operator(ExportKSAnim.bl_idname, text="AC Anim (.ksanim)")
 
 
-REGISTER_CLASSES = (
-    ReportOperator,
-    CopyClipboardButtonOperator,
-    ExportKN5,
-)
+REGISTER_CLASSES = (ReportOperator, CopyClipboardButtonOperator, ExportKN5, ExportKSAnim)
 
 
 def register():
-    for cls in REGISTER_CLASSES:
-        bpy.utils.register_class(cls)
+    for cls in REGISTER_CLASSES: bpy.utils.register_class(cls)
     bpy.types.TOPBAR_MT_file_export.append(menu_func)
 
 
 def unregister():
     bpy.types.TOPBAR_MT_file_export.remove(menu_func)
-    for cls in reversed(REGISTER_CLASSES):
-        bpy.utils.unregister_class(cls)
+    for cls in reversed(REGISTER_CLASSES): bpy.utils.unregister_class(cls)

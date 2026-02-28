@@ -19,11 +19,11 @@ from .utils import register_recursive, unregister_recursive
 
 
 bl_info = {
-    "name":        "Assetto Corsa (.kn5)",
-    "version":     (1, 0, 0),
-    "author":      "Thomas Hagnhofer, Paul Greveson, JWL",
+    "name":        "Assetto Corsa (.kn5) (.ksanim)",
+    "version":     (1, 0, 1),
+    "author":      "Thomas Hagnhofer, Paul Greveson, N Murdoch, JWL",
     "blender":     (3, 0, 0),
-    "description": "Export to the Assetto Corsa KN5 format",
+    "description": "Export to Assetto Corsa KN5 and KSANIM formats",
     "location":    "File Export menu, Object properties, Material properties",
     "support":     "COMMUNITY",
     "category":    "Import-Export",
