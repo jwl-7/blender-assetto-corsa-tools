@@ -85,8 +85,6 @@ class KSAnimWriter(KN5Writer):
         self.objects[obj.name]['frames'].append(rotation + position + scales)
 
     def _add_bone_frame(self, bone: bpy.types.PoseBone):
-        self.write_string(bone.name)
-
         bmat = bone.matrix
 
         if bone.name in DRIVER_BONES:
