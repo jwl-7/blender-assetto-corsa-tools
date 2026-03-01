@@ -1,10 +1,46 @@
 import bpy
 import mathutils
 import math
-from typing import Any
-from .exporter_utils import convert_vector3, convert_quaternion
+from typing import Any, Set
+from .exporter_utils import convert_vector3, convert_quaternion, convert_scale3
 from .kn5_writer import KN5Writer
 
+DRIVER_BONES: Set[str] = {
+    'DRIVER_RIG_Leg_L',
+    'DRIVER_RIG_Shin_L',
+    'DRIVER_RIG_Hill_L',
+    'DRIVER_RIG_Leg_R',
+    'DRIVER_RIG_Shin_R',
+    'DRIVER_RIG_Hill_R',
+    'DRIVER_RIG_Arm_L',
+    'DRIVER_RIG_Shoulder_L',
+    'DRIVER_RIG_ForeArm_L',
+    'DRIVER_RIG_Arm_R',
+    'DRIVER_RIG_Shoulder_R',
+    'DRIVER_RIG_ForeArm_R',
+    'DRIVER_RIG_ForeArm_END_L',
+    'DRIVER_RIG_ForeArm_END_R',
+    'DRIVER_HAND_L_Thumb1',
+    'DRIVER_HAND_L_Thumb2',
+    'DRIVER_HAND_R_Thumb1',
+    'DRIVER_HAND_R_Thumb2',
+    'DRIVER_HAND_Index1',
+    'DRIVER_HAND_Index2',
+    'DRIVER_HAND_Middle1',
+    'DRIVER_HAND_Middle2',
+    'DRIVER_HAND_Ring1',
+    'DRIVER_HAND_Ring2',
+    'DRIVER_HAND_Pinkie1',
+    'DRIVER_HAND_Pinkie2',
+    'DRIVER_HAND_Index4',
+    'DRIVER_HAND_Index5',
+    'DRIVER_HAND_Middle4',
+    'DRIVER_HAND_Middle5',
+    'DRIVER_HAND_Ring4',
+    'DRIVER_HAND_Ring5',
+    'DRIVER_HAND_Pinkie4',
+    'DRIVER_HAND_Pinkie5',
+}
 
 MAT_ROTATE_X_90 = mathutils.Matrix.Rotation(math.pi / 2, 4, 'X')
 MAT_ROTATE_X_N90 = mathutils.Matrix.Rotation(-math.pi / 2, 4, 'X')
@@ -42,42 +78,35 @@ class KSAnimWriter(KN5Writer):
         self.draw_order.append(name)
 
     def _add_frame(self, obj: bpy.types.Object):
-        if obj.rotation_mode == 'QUATERNION':
-            rotation = list(obj.rotation_quaternion)
+        co, rot, scale = obj.matrix_local.decompose()
+        rotation = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
+        position = list(convert_vector3(co))
+        scales = list(convert_scale3(scale))
+        self.objects[obj.name]['frames'].append(rotation + position + scales)
+
+    def _add_bone_frame(self, bone: bpy.types.PoseBone):
+        self.write_string(bone.name)
+
+        bmat = bone.matrix
+
+        if bone.name in DRIVER_BONES:
+            bmat @= MAT_ROTATE_X_180
+
+        if bone.parent:
+            pmat = bone.parent.matrix
+
+            if bone.parent.name in DRIVER_BONES:
+                pmat @= MAT_ROTATE_X_180
+
+            mat = (pmat.inverted() @ bmat).transposed()
         else:
-            rotation = list(obj.matrix_parent_inverse.to_quaternion() @ obj.rotation_euler.to_quaternion())
+            mat = bmat.transposed()
 
-        rotation = rotation[1:4] + rotation[0:1]
-
-        if obj.parent:
-            p = list(obj.matrix_parent_inverse @ obj.location)
-            position = p
-        else:
-            p = list(obj.location)
-            position = [p[0], p[2], -p[1]]
-
-        scale = list(obj.scale)
-        self.objects[obj.name]['frames'].append(rotation + position + scale)
-
-    def _add_bone_frame(self, obj: bpy.types.PoseBone):
-        rotation = obj.matrix.copy()
-        rotation = rotation @ MAT_ROTATE_X_180
-        rotation = rotation.to_quaternion()
-
-        if obj.parent:
-            pmat = obj.parent.matrix @ MAT_ROTATE_X_180
-            pmat = pmat.inverted()
-            p = list(pmat @ obj.head)
-            prot = pmat.to_quaternion()
-            rotation = list(prot @ rotation)
-        else:
-            p = list(obj.head)
-
-        rotation = list(rotation[1:4] + rotation[0:1])
-        position = p
-        scale = list(obj.scale)
-
-        self.objects[obj.name]['frames'].append(rotation + position + scale)
+        co, rot, scale = mat.decompose()
+        rotation = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
+        position = list(convert_vector3(co))
+        scales = list(convert_scale3(scale))
+        self.objects[bone.name]['frames'].append(rotation + position + scales)
 
     def write(self):
         scene: bpy.types.Scene = self.context.scene
@@ -193,9 +222,17 @@ class KNHWriter(KN5Writer):
     def _write_recursive_knh_bone(self, bone: bpy.types.PoseBone):
         self.write_string(bone.name)
 
-        bmat = bone.matrix @ MAT_ROTATE_X_180
+        bmat = bone.matrix
+
+        if bone.name in DRIVER_BONES:
+            bmat @= MAT_ROTATE_X_180
+
         if bone.parent:
-            pmat = bone.parent.matrix @ MAT_ROTATE_X_180
+            pmat = bone.parent.matrix
+
+            if bone.parent.name in DRIVER_BONES:
+                pmat @= MAT_ROTATE_X_180
+
             mat = (pmat.inverted() @ bmat).transposed()
         else:
             mat = bmat.transposed()

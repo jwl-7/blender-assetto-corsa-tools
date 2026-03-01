@@ -31,6 +31,11 @@ def convert_vector3(in_vec: Vector) -> Vector:
     return Vector((in_vec[0], in_vec[2], -in_vec[1]))
 
 
+def convert_scale3(in_vec: Vector) -> Vector:
+    """Swaps Y and Z axes and negates Y for Assetto Corsa."""
+    return Vector((in_vec[0], in_vec[2], in_vec[1]))
+
+
 def convert_quaternion(in_quat: Quaternion) -> Quaternion:
     """Converts quaternion rotation for Assetto Corsa."""
     axis: Vector
@@ -38,24 +43,6 @@ def convert_quaternion(in_quat: Quaternion) -> Quaternion:
     axis, angle = in_quat.to_axis_angle()
     axis = convert_vector3(axis)
     return Quaternion(axis, angle)
-
-def convert_matrix_anim(in_matrix: Matrix) -> Matrix:
-    """Converts a Blender matrix to Assetto Corsa animation coordinate system."""
-    mat = Matrix((
-        (1, 0, 0, 0),
-        (0, 0, 1, 0),
-        (0, -1, 0, 0),
-        (0, 0, 0, 1)
-    ))
-    return mat @ in_matrix @ mat.inverted()
-
-def convert_root_anim(mat: Matrix) -> Matrix:
-    """Root bone basis swap + 180° Z rotation for Assetto Corsa."""
-    ac_mat = convert_matrix_anim(mat)
-    co, rot, scl = ac_mat.decompose()
-    flip = Quaternion((0, 0, 1, 0))
-    rot_ac = flip @ rot
-    return Matrix.Translation(co) @ rot_ac.to_matrix().to_4x4() @ Matrix.Diagonal(scl.to_4d()).to_4x4()
 
 
 def get_texture_nodes(material: bpy.types.Material) -> list[bpy.types.ShaderNodeTexImage]:
