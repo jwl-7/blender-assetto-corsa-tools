@@ -163,14 +163,12 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
         default='use_all'
     )
     reverse_animation: BoolProperty(name='Reverse Animation', default=False)
-    add_colons: BoolProperty(name='Fix DRIVER: Objects', default=False)
     export_base_pos: BoolProperty(name='Export driver_base_pos.knh', default=False)
 
     def draw(self, context: bpy.types.Context):
         layout: bpy.types.UILayout = self.layout
         layout.prop(self, 'selection_type')
         layout.prop(self, 'reverse_animation')
-        layout.prop(self, 'add_colons')
         layout.prop(self, 'export_base_pos')
 
     def execute(self, context: bpy.types.Context) -> set:
@@ -183,7 +181,6 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
                         context,
                         self.filepath,
                         self.selection_type,
-                        self.add_colons,
                         warnings
                     ).write()
                 else:
@@ -193,7 +190,6 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
                         self.filepath,
                         self.selection_type,
                         self.reverse_animation,
-                        self.add_colons,
                         warnings
                     ).write()
             bpy.ops.kn5.report_message(
@@ -219,8 +215,8 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
 
 def menu_func(self, context: bpy.types.Context):
     """Adds Assetto Corsa options to the File > Export menu."""
-    self.layout.operator(ExportKN5.bl_idname, text='AC 3D (.kn5)')
-    self.layout.operator(ExportKSAnim.bl_idname, text='AC Anim (.ksanim)')
+    self.layout.operator(ExportKN5.bl_idname, text='Assetto Corsa 3D (.kn5)')
+    self.layout.operator(ExportKSAnim.bl_idname, text='Assetto Corsa Animation (.ksanim)')
 
 
 REGISTER_CLASSES: tuple = (
