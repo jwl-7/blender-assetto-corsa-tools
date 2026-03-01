@@ -7,58 +7,8 @@ from .exporter_utils import convert_vector3, convert_quaternion
 from .kn5_writer import KN5Writer
 
 
-NEGABONES: set[str] = {
-    'DRIVER_RIG_Leg_L',
-    'DRIVER_RIG_Shin_L',
-    'DRIVER_RIG_Hill_L',
-    'DRIVER_RIG_Leg_R',
-    'DRIVER_RIG_Shin_R',
-    'DRIVER_RIG_Hill_R',
-    'DRIVER_RIG_Arm_L',
-    'DRIVER_RIG_Shoulder_L',
-    'DRIVER_RIG_ForeArm_L',
-    'DRIVER_RIG_Arm_R',
-    'DRIVER_RIG_Shoulder_R',
-    'DRIVER_RIG_ForeArm_R',
-    'DRIVER_RIG_ForeArm_END_L',
-    'DRIVER_RIG_ForeArm_END_R',
-    'DRIVER_HAND_L_Thumb1',
-    'DRIVER_HAND_L_Thumb2',
-    'DRIVER_HAND_R_Thumb1',
-    'DRIVER_HAND_R_Thumb2',
-    'DRIVER_HAND_Index1',
-    'DRIVER_HAND_Index2',
-    'DRIVER_HAND_Middle1',
-    'DRIVER_HAND_Middle2',
-    'DRIVER_HAND_Ring1',
-    'DRIVER_HAND_Ring2',
-    'DRIVER_HAND_Pinkie1',
-    'DRIVER_HAND_Pinkie2',
-    'DRIVER_HAND_Index4',
-    'DRIVER_HAND_Index5',
-    'DRIVER_HAND_Middle4',
-    'DRIVER_HAND_Middle5',
-    'DRIVER_HAND_Ring4',
-    'DRIVER_HAND_Ring5',
-    'DRIVER_HAND_Pinkie4',
-    'DRIVER_HAND_Pinkie5',
-    'mixamorig:LeftUpLeg',
-    'mixamorig:LeftLeg',
-    'mixamorig:LeftFoot',
-    'mixamorig:RightUpLeg',
-    'mixamorig:RightLeg',
-    'mixamorig:RightFoot',
-    'mixamorig:LeftArm',
-    'mixamorig:LeftShoulder',
-    'mixamorig:LeftForeArm',
-    'mixamorig:RightArm',
-    'mixamorig:RightShoulder',
-    'mixamorig:RightForeArm',
-    'mixamorig:LeftHand',
-    'mixamorig:RightHand'
-}
-
-HALF_ROT_MAT: mathutils.Matrix = mathutils.Matrix.Rotation(math.pi, 4, 'X')
+MAT_ROTATE_X_180 = mathutils.Matrix.Rotation(math.pi, 4, 'X')
+MAT_ROTATE_X_90 = mathutils.Matrix.Rotation(-math.pi / 2, 4, 'X')
 
 
 class KSAnimWriter(KN5Writer):
@@ -71,7 +21,6 @@ class KSAnimWriter(KN5Writer):
         filepath: str,
         selection_type: str,
         reverse_animation: bool,
-        add_colons: bool,
         warnings: list[str]
     ):
         super().__init__(file)
@@ -79,53 +28,52 @@ class KSAnimWriter(KN5Writer):
         self.filepath: str = filepath
         self.selection_type: str = selection_type
         self.reverse_animation: bool = reverse_animation
-        self.add_colons: bool = add_colons
         self.warnings: list[str] = warnings
         self.objects: dict[str, dict[str, Any]] = {}
         self.draw_order: list[str] = []
 
-    def is_negabone(self, name: str) -> bool:
-        """Checks if bone needs orientation fix."""
-        if name in NEGABONES:
-            return True
-        if name.startswith('mixamorig'):
-            normalized_name: str = re.sub(r'mixamorig\d*:', 'mixamorig:', name)
-            return normalized_name in NEGABONES
-        return False
-
     def _add_obj(self, obj: bpy.types.Object | bpy.types.PoseBone):
         name: str = obj.name
-        if self.add_colons and name.startswith('DRIVER_'):
-            name = 'DRIVER:' + name[7:]
         self.objects[obj.name] = {'name': name, 'frames': []}
         self.draw_order.append(obj.name)
 
     def _add_frame(self, obj: bpy.types.Object):
-        co: mathutils.Vector
-        rot: mathutils.Quaternion
-        scale: mathutils.Vector
-        co, rot, scale = obj.matrix_local.decompose()
+        if obj.rotation_mode == 'QUATERNION':
+            rotation = list(obj.rotation_quaternion)
+        else:
+            rotation = list(obj.matrix_parent_inverse.to_quaternion() @ obj.rotation_euler.to_quaternion())
 
-        rotation: list[float] = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
-        position: list[float] = list(convert_vector3(co))
-        self.objects[obj.name]['frames'].append(rotation + position + [scale[0], scale[2], scale[1]])
+        rotation = rotation[1:4] + rotation[0:1]
+
+        if obj.parent:
+            p = list(obj.matrix_parent_inverse @ obj.location)
+            position = p
+        else:
+            p = list(obj.location)
+            position = [p[0], p[2], -p[1]]
+
+        scale = list(obj.scale)
+        self.objects[obj.name]['frames'].append(rotation + position + scale)
 
     def _add_bone_frame(self, obj: bpy.types.PoseBone):
-        mat: mathutils.Matrix = obj.matrix @ HALF_ROT_MAT if self.is_negabone(obj.name) else obj.matrix
+        rotation = obj.matrix.copy()
+        rotation = rotation @ MAT_ROTATE_X_180
+        rotation = rotation.to_quaternion()
+
         if obj.parent:
-            pmat: mathutils.Matrix = obj.parent.matrix @ HALF_ROT_MAT if self.is_negabone(obj.parent.name) else obj.parent.matrix
-            local_mat: mathutils.Matrix = pmat.inverted() @ mat
+            pmat = obj.parent.matrix @ MAT_ROTATE_X_180
+            pmat = pmat.inverted()
+            p = list(pmat @ obj.head)
+            prot = pmat.to_quaternion()
+            rotation = list(prot @ rotation)
         else:
-            local_mat = mat
+            p = list(obj.head)
 
-        co: mathutils.Vector
-        rot: mathutils.Quaternion
-        scale: mathutils.Vector
-        co, rot, scale = local_mat.decompose()
+        rotation = list(rotation[1:4] + rotation[0:1])
+        position = p
+        scale = list(obj.scale)
 
-        rotation: list[float] = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
-        position: list[float] = list(convert_vector3(co))
-        self.objects[obj.name]['frames'].append(rotation + position + [scale[0], scale[2], scale[1]])
+        self.objects[obj.name]['frames'].append(rotation + position + scale)
 
     def write(self):
         scene: bpy.types.Scene = self.context.scene
@@ -202,24 +150,13 @@ class KNHWriter(KN5Writer):
         context: bpy.types.Context,
         filepath: str,
         selection_type: str,
-        add_colons: bool,
         warnings: list[str]
     ):
         super().__init__(file)
         self.context: bpy.types.Context = context
         self.filepath: str = filepath
         self.selection_type: str = selection_type
-        self.add_colons: bool = add_colons
         self.warnings: list[str] = warnings
-
-    def is_negabone(self, name: str) -> bool:
-        """Checks if bone needs orientation fix."""
-        if name in NEGABONES:
-            return True
-        if name.startswith('mixamorig'):
-            normalized_name: str = re.sub(r'mixamorig\d*:', 'mixamorig:', name)
-            return normalized_name in NEGABONES
-        return False
 
     def write(self):
         objs: list[bpy.types.Object] = list(self.context.selected_objects) if self.selection_type == 'use_selection' else list(self.context.view_layer.objects)
@@ -228,13 +165,16 @@ class KNHWriter(KN5Writer):
                 self._write_recursive_knh_obj(o)
 
     def _write_recursive_knh_obj(self, obj: bpy.types.Object):
-        name: str = 'DRIVER:' + obj.name[7:] if self.add_colons and obj.name.startswith('DRIVER_') else obj.name
-        self.write_string(name)
+        self.write_string(obj.name)
 
-        mat: mathutils.Matrix = obj.matrix_local if obj.parent else (obj.matrix_local @ mathutils.Matrix.Rotation(-math.pi/2, 4, 'X'))
+        if obj.parent:
+            mat = obj.matrix_local.transposed()
+        else:
+            mat = (obj.matrix_local @ MAT_ROTATE_X_90).transposed()
+
         self.write_matrix(mat)
+        children = list(obj.children)
 
-        children: list[bpy.types.Object] = list(obj.children)
         if obj.type == 'ARMATURE' and obj.pose:
             rootbones: list[bpy.types.PoseBone] = [b for b in obj.pose.bones if not b.parent]
             self.write_uint(len(rootbones) + len(children))
@@ -247,17 +187,18 @@ class KNHWriter(KN5Writer):
             self._write_recursive_knh_obj(o)
 
     def _write_recursive_knh_bone(self, bone: bpy.types.PoseBone):
-        name: str = 'DRIVER:' + bone.name[7:] if self.add_colons and bone.name.startswith('DRIVER_') else bone.name
-        self.write_string(name)
+        self.write_string(bone.name)
 
-        mat: mathutils.Matrix = bone.matrix @ HALF_ROT_MAT if self.is_negabone(bone.name) else bone.matrix
+        bmat = bone.matrix @ MAT_ROTATE_X_180
         if bone.parent:
-            pmat: mathutils.Matrix = bone.parent.matrix @ HALF_ROT_MAT if self.is_negabone(bone.parent.name) else bone.parent.matrix
-            self.write_matrix(pmat.inverted() @ mat)
+            pmat = bone.parent.matrix @ MAT_ROTATE_X_180
+            mat = (pmat.inverted() @ bmat).transposed()
         else:
-            self.write_matrix(mat)
+            mat = bmat.transposed()
 
-        bone_children: list[bpy.types.PoseBone] = list(bone.children)
+        self.write_matrix(mat)
+        bone_children = list(bone.children)
         self.write_uint(len(bone_children))
+
         for b in bone_children:
             self._write_recursive_knh_bone(b)
