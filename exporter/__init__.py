@@ -104,9 +104,9 @@ class KN5FileWriter(KN5Writer):
             self.file,
             self.context,
             self.settings,
-            self.scale_to_meters,
             self.warnings,
-            material_writer
+            material_writer,
+            self.scale_to_meters,
         ).write()
 
 
@@ -136,8 +136,8 @@ class ExportKN5(bpy.types.Operator, ExportHelper):
                     context,
                     settings,
                     self.filepath,
-                    self.scale_to_meters,
-                    warnings
+                    warnings,
+                    self.scale_to_meters
                 ).write()
                 bpy.ops.kn5.report_message(
                     'INVOKE_DEFAULT',

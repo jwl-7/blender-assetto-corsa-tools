@@ -30,6 +30,8 @@ NODE_SETTINGS: tuple = (
     'renderable',
 )
 
+MAT_SCALE_M = Matrix.Diagonal((0.01, 0.01, 0.01, 1.0))
+
 
 class NodeWriter(KN5Writer):
     def __init__(
@@ -108,7 +110,7 @@ class NodeWriter(KN5Writer):
                 self.warnings.append(msg)
             matrix = convert_matrix(obj.matrix_local)
             if self.scale_to_meters:
-                matrix.translation *= 0.01
+                matrix @= MAT_SCALE_M
             for child in obj.children:
                 if not child.name.startswith('__'):
                     num_children += 1
@@ -138,7 +140,7 @@ class NodeWriter(KN5Writer):
             if obj.parent:
                 transform_matrix = convert_matrix(obj.parent.matrix_world.inverted())
                 if self.scale_to_meters:
-                    transform_matrix.translation *= 0.01
+                    transform_matrix @= MAT_SCALE_M
             node_data['transform'] = transform_matrix
             self._write_base_node_data(node_data)
         node_properties: 'NodeProperties' = NodeProperties(obj)

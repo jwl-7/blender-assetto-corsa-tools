@@ -45,10 +45,17 @@ DRIVER_BONES: Set[str] = {
 MAT_ROTATE_X_90 = mathutils.Matrix.Rotation(math.pi / 2, 4, 'X')
 MAT_ROTATE_X_N90 = mathutils.Matrix.Rotation(-math.pi / 2, 4, 'X')
 MAT_ROTATE_X_180 = mathutils.Matrix.Rotation(math.pi, 4, 'X')
+MAT_ROTATE_X_N180 = mathutils.Matrix.Rotation(-math.pi, 4, 'X')
+
+MAT_ROTATE_Y_90 = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Y')
+MAT_ROTATE_Y_N90 = mathutils.Matrix.Rotation(-math.pi / 2, 4, 'Y')
+MAT_ROTATE_Y_180 = mathutils.Matrix.Rotation(math.pi, 4, 'Y')
 
 MAT_ROTATE_Z_90 = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Z')
 MAT_ROTATE_Z_N90 = mathutils.Matrix.Rotation(-math.pi / 2, 4, 'Z')
 MAT_ROTATE_Z_180 = mathutils.Matrix.Rotation(math.pi, 4, 'Z')
+
+MAT_SCALE_M = mathutils.Matrix.Diagonal((0.01, 0.01, 0.01, 1.0))
 
 
 class KSAnimWriter(KN5Writer):
@@ -80,34 +87,41 @@ class KSAnimWriter(KN5Writer):
         self.draw_order.append(name)
 
     def _add_frame(self, obj: bpy.types.Object):
-        co, rot, scale = obj.matrix_local.decompose()
-        rotation = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
-        position = [x * 0.01 for x in convert_vector3(co)] if self.scale_to_meters else list(convert_vector3(co))
-        scales = list(convert_scale3(scale))
-        self.objects[obj.name]['frames'].append(rotation + position + scales)
+        mat = obj.matrix_local.copy()
+        if self.scale_to_meters:
+            mat @= MAT_SCALE_M
+        co, rot, scale = mat.decompose()
+        rotation = list(convert_quaternion(rot))
+        rotation = rotation[1:4] + rotation[0:1]
+        position = list(convert_vector3(co))
+        scale = list(obj.scale)
+        self.objects[obj.name]['frames'].append(rotation + position + scale)
 
     def _add_bone_frame(self, bone: bpy.types.PoseBone):
         bmat = bone.matrix.copy()
+        if self.scale_to_meters:
+            bmat @= MAT_SCALE_M
         if bone.name in DRIVER_BONES:
             bmat @= MAT_ROTATE_X_180
         else:
-            bmat @= MAT_ROTATE_X_N90
+            bmat @= MAT_ROTATE_X_90 @ MAT_ROTATE_Z_180
 
         if bone.parent:
             pmat = bone.parent.matrix.copy()
             if bone.parent.name in DRIVER_BONES:
                 pmat @= MAT_ROTATE_X_180
             else:
-                pmat @= MAT_ROTATE_X_N90
+                pmat @= MAT_ROTATE_X_90 @ MAT_ROTATE_Z_180
             mat = pmat.inverted() @ bmat
         else:
             mat = bmat
 
         co, rot, scale = mat.decompose()
-        rotation = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
-        position = [x * 0.01 for x in convert_vector3(co)] if self.scale_to_meters else list(convert_vector3(co))
-        scales = list(convert_scale3(scale))
-        self.objects[bone.name]['frames'].append(rotation + position + scales)
+        rotation = list(convert_quaternion(rot))
+        rotation = rotation[1:4] + rotation[0:1]
+        position = list(convert_vector3(co))
+        scale = list(bone.scale)
+        self.objects[bone.name]['frames'].append(rotation + position + scale)
 
     def write(self):
         scene: bpy.types.Scene = self.context.scene
