@@ -96,9 +96,9 @@ class KSAnimWriter(KN5Writer):
             if bone.parent.name in DRIVER_BONES:
                 pmat @= MAT_ROTATE_X_180
 
-            mat = (pmat.inverted() @ bmat).transposed()
+            mat = pmat.inverted() @ bmat
         else:
-            mat = bmat.transposed()
+            mat = bmat
 
         co, rot, scale = mat.decompose()
         rotation = list(convert_quaternion(rot))[1:4] + list(convert_quaternion(rot))[0:1]
