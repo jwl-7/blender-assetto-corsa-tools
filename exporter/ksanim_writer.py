@@ -33,9 +33,9 @@ class KSAnimWriter(KN5Writer):
         self.draw_order: list[str] = []
 
     def _add_obj(self, obj: bpy.types.Object | bpy.types.PoseBone):
-        name: str = obj.name
-        self.objects[obj.name] = {'name': name, 'frames': []}
-        self.draw_order.append(obj.name)
+        name = obj.name
+        self.objects[name] = {'name': name, 'frames': []}
+        self.draw_order.append(name)
 
     def _add_frame(self, obj: bpy.types.Object):
         if obj.rotation_mode == 'QUATERNION':
