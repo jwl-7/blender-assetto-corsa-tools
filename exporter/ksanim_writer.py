@@ -85,17 +85,18 @@ class KSAnimWriter(KN5Writer):
         self.objects[obj.name]['frames'].append(rotation + position + scales)
 
     def _add_bone_frame(self, bone: bpy.types.PoseBone):
-        bmat = bone.matrix
-
+        bmat = bone.matrix.clone()
         if bone.name in DRIVER_BONES:
             bmat @= MAT_ROTATE_X_180
+        else:
+            bmat @= MAT_ROTATE_X_N90
 
         if bone.parent:
-            pmat = bone.parent.matrix
-
+            pmat = bone.parent.matrix.clone()
             if bone.parent.name in DRIVER_BONES:
                 pmat @= MAT_ROTATE_X_180
-
+            else:
+                pmat @= MAT_ROTATE_X_N90
             mat = pmat.inverted() @ bmat
         else:
             mat = bmat
@@ -198,10 +199,11 @@ class KNHWriter(KN5Writer):
     def _write_recursive_knh_obj(self, obj: bpy.types.Object):
         self.write_string(obj.name)
 
+        bmat = obj.matrix_local.clone()
         if obj.parent:
-            mat = obj.matrix_local.transposed()
+            mat = bmat.transposed()
         else:
-            mat = (obj.matrix_local @ MAT_ROTATE_X_90).transposed()
+            mat = (bmat @ MAT_ROTATE_X_90).transposed()
 
         self.write_matrix(mat)
         children = list(obj.children)
@@ -220,17 +222,14 @@ class KNHWriter(KN5Writer):
     def _write_recursive_knh_bone(self, bone: bpy.types.PoseBone):
         self.write_string(bone.name)
 
-        bmat = bone.matrix
-
+        bmat = bone.matrix.clone()
         if bone.name in DRIVER_BONES:
             bmat @= MAT_ROTATE_X_180
 
         if bone.parent:
-            pmat = bone.parent.matrix
-
+            pmat = bone.parent.matrix.clone()
             if bone.parent.name in DRIVER_BONES:
                 pmat @= MAT_ROTATE_X_180
-
             mat = (pmat.inverted() @ bmat).transposed()
         else:
             mat = bmat.transposed()
