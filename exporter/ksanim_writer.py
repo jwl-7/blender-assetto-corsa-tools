@@ -1,14 +1,18 @@
 import bpy
 import mathutils
 import math
-import re
 from typing import Any
 from .exporter_utils import convert_vector3, convert_quaternion
 from .kn5_writer import KN5Writer
 
 
+MAT_ROTATE_X_90 = mathutils.Matrix.Rotation(math.pi / 2, 4, 'X')
+MAT_ROTATE_X_N90 = mathutils.Matrix.Rotation(-math.pi / 2, 4, 'X')
 MAT_ROTATE_X_180 = mathutils.Matrix.Rotation(math.pi, 4, 'X')
-MAT_ROTATE_X_90 = mathutils.Matrix.Rotation(-math.pi / 2, 4, 'X')
+
+MAT_ROTATE_Z_90 = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Z')
+MAT_ROTATE_Z_N90 = mathutils.Matrix.Rotation(-math.pi / 2, 4, 'Z')
+MAT_ROTATE_Z_180 = mathutils.Matrix.Rotation(math.pi, 4, 'Z')
 
 
 class KSAnimWriter(KN5Writer):
