@@ -42,13 +42,13 @@ This fork of the KN5 exporter is made to support the exporting of cars instead o
 1. Create `settings.json` file with [utility converter](./utils/fbx_ini_to_settings_json.py)
 2. Make sure `settings.json` and the `/texture` folder are in the same directory that the `kn5` will be exported
 3. Open Blender
-3. Go to `File` > `Export` > `AC 3D (.kn5)`
+3. Go to `File` > `Export` > `Assetto Corsa 3D (.kn5)`
 4. Select directory with generated `settings.json` and export
 
 ### Animations
 1. Import `.fbx`
 2. Create a root bone on the armature (ex: `acroot`)
-3. Go to `File` > `Export` > `AC Anim (.ksanim)`
+3. Go to `File` > `Export` > `Assetto Corsa Animation (.ksanim)`
 
 ## Credits
 
