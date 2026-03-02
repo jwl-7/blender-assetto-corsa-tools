@@ -57,6 +57,8 @@ MAT_ROTATE_Z_180 = mathutils.Matrix.Rotation(math.pi, 4, 'Z')
 
 MAT_SCALE_M = mathutils.Matrix.Diagonal((0.01, 0.01, 0.01, 1.0))
 
+CM_TO_M = 0.01
+
 
 class KSAnimWriter(KN5Writer):
     """Writer for AC Anim (.ksanim) files."""
@@ -88,39 +90,36 @@ class KSAnimWriter(KN5Writer):
 
     def _add_frame(self, obj: bpy.types.Object):
         mat = obj.matrix_local.copy()
+        co, rot, sc = mat.decompose()
+        rotation = rot.to_quaternion()
+        rotation = [rotation.x, rotation.y, rotation.z, rotation.w]
+        position = [co.x, co.y, co.z]
+        scale = list(sc)
         if self.scale_to_meters:
-            mat @= MAT_SCALE_M
-        co, rot, scale = mat.decompose()
-        rotation = list(convert_quaternion(rot))
-        rotation = rotation[1:4] + rotation[0:1]
-        position = list(convert_vector3(co))
-        scale = list(obj.scale)
+            if obj.name == 'acroot':
+                scale = [s * CM_TO_M for s in scale]
+                position = [p * CM_TO_M for p in position]
         self.objects[obj.name]['frames'].append(rotation + position + scale)
 
     def _add_bone_frame(self, bone: bpy.types.PoseBone):
         bmat = bone.matrix.copy()
-        if self.scale_to_meters:
-            bmat @= MAT_SCALE_M
-        if bone.name in DRIVER_BONES:
+        if bone.name in DRIVER_BONES or bone.name == 'acroot':
             bmat @= MAT_ROTATE_X_180
-        else:
-            bmat @= MAT_ROTATE_X_90 @ MAT_ROTATE_Z_180
-
         if bone.parent:
             pmat = bone.parent.matrix.copy()
-            if bone.parent.name in DRIVER_BONES:
+            if bone.parent.name in DRIVER_BONES or bone.name == 'acroot':
                 pmat @= MAT_ROTATE_X_180
-            else:
-                pmat @= MAT_ROTATE_X_90 @ MAT_ROTATE_Z_180
             mat = pmat.inverted() @ bmat
         else:
             mat = bmat
-
-        co, rot, scale = mat.decompose()
-        rotation = list(convert_quaternion(rot))
-        rotation = rotation[1:4] + rotation[0:1]
-        position = list(convert_vector3(co))
-        scale = list(bone.scale)
+        co, rot, sc = mat.decompose()
+        rotation = [rot.x, rot.y, rot.z, rot.w]
+        position = [co.x, co.y, co.z]
+        scale = list(sc)
+        if self.scale_to_meters:
+            if bone.name == 'acroot':
+                scale = [s * CM_TO_M for s in scale]
+                position = [p * CM_TO_M for p in position]
         self.objects[bone.name]['frames'].append(rotation + position + scale)
 
     def write(self):
@@ -223,9 +222,9 @@ class KNHWriter(KN5Writer):
         else:
             mat = (bmat @ MAT_ROTATE_X_90).transposed()
         if self.scale_to_meters:
-            mat[3][0] *= 0.01
-            mat[3][1] *= 0.01
-            mat[3][2] *= 0.01
+            mat[3][0] *= CM_TO_M
+            mat[3][1] *= CM_TO_M
+            mat[3][2] *= CM_TO_M
 
         self.write_matrix(mat)
         children = list(obj.children)
@@ -245,12 +244,12 @@ class KNHWriter(KN5Writer):
         self.write_string(bone.name)
 
         bmat = bone.matrix.copy()
-        if bone.name in DRIVER_BONES:
+        if bone.name in DRIVER_BONES or bone.name == 'acroot':
             bmat @= MAT_ROTATE_X_180
 
         if bone.parent:
             pmat = bone.parent.matrix.copy()
-            if bone.parent.name in DRIVER_BONES:
+            if bone.parent.name in DRIVER_BONES or bone.name == 'acroot':
                 pmat @= MAT_ROTATE_X_180
             mat = (pmat.inverted() @ bmat).transposed()
         else:
