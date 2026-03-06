@@ -2,7 +2,6 @@ import bpy
 import mathutils
 import math
 from typing import Any, Set
-from .exporter_utils import convert_vector3, convert_quaternion, convert_scale3
 from .kn5_writer import KN5Writer
 
 DRIVER_BONES: Set[str] = {
@@ -89,7 +88,6 @@ class KSAnimWriter(KN5Writer):
     def _add_frame(self, obj: bpy.types.Object):
         mat = obj.matrix_local.copy()
         co, rot, sc = mat.decompose()
-        rotation = rot.to_quaternion()
         rotation = [rotation.x, rotation.y, rotation.z, rotation.w]
         position = [co.x, co.y, co.z]
         scale = list(sc)
