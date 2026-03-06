@@ -70,8 +70,7 @@ class KSAnimWriter(KN5Writer):
         filepath: str,
         selection_type: str,
         reverse_animation: bool,
-        warnings: list[str],
-        scale_to_meters: bool = False
+        warnings: list[str]
     ):
         super().__init__(file)
         self.context: bpy.types.Context = context
@@ -79,7 +78,6 @@ class KSAnimWriter(KN5Writer):
         self.selection_type: str = selection_type
         self.reverse_animation: bool = reverse_animation
         self.warnings: list[str] = warnings
-        self.scale_to_meters: bool = scale_to_meters
         self.objects: dict[str, dict[str, Any]] = {}
         self.draw_order: list[str] = []
 
@@ -95,10 +93,6 @@ class KSAnimWriter(KN5Writer):
         rotation = [rotation.x, rotation.y, rotation.z, rotation.w]
         position = [co.x, co.y, co.z]
         scale = list(sc)
-        if self.scale_to_meters:
-            if obj.name == 'acroot':
-                scale = [s * CM_TO_M for s in scale]
-                position = [p * CM_TO_M for p in position]
         self.objects[obj.name]['frames'].append(rotation + position + scale)
 
     def _add_bone_frame(self, bone: bpy.types.PoseBone):
@@ -116,10 +110,6 @@ class KSAnimWriter(KN5Writer):
         rotation = [rot.x, rot.y, rot.z, rot.w]
         position = [co.x, co.y, co.z]
         scale = list(sc)
-        if self.scale_to_meters:
-            if bone.name == 'acroot':
-                scale = [s * CM_TO_M for s in scale]
-                position = [p * CM_TO_M for p in position]
         self.objects[bone.name]['frames'].append(rotation + position + scale)
 
     def write(self):
@@ -197,15 +187,13 @@ class KNHWriter(KN5Writer):
         context: bpy.types.Context,
         filepath: str,
         selection_type: str,
-        warnings: list[str],
-        scale_to_meters: bool = False
+        warnings: list[str]
     ):
         super().__init__(file)
         self.context: bpy.types.Context = context
         self.filepath: str = filepath
         self.selection_type: str = selection_type
         self.warnings: list[str] = warnings
-        self.scale_to_meters: bool = scale_to_meters
 
     def write(self):
         objs: list[bpy.types.Object] = list(self.context.selected_objects) if self.selection_type == 'use_selection' else list(self.context.view_layer.objects)
@@ -221,10 +209,6 @@ class KNHWriter(KN5Writer):
             mat = bmat.transposed()
         else:
             mat = (bmat @ MAT_ROTATE_X_90).transposed()
-        if self.scale_to_meters:
-            mat[3][0] *= CM_TO_M
-            mat[3][1] *= CM_TO_M
-            mat[3][2] *= CM_TO_M
 
         self.write_matrix(mat)
         children = list(obj.children)

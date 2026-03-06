@@ -30,8 +30,6 @@ NODE_SETTINGS: tuple = (
     'renderable',
 )
 
-MAT_SCALE_M = Matrix.Diagonal((0.01, 0.01, 0.01, 1.0))
-
 
 class NodeWriter(KN5Writer):
     def __init__(
@@ -40,15 +38,13 @@ class NodeWriter(KN5Writer):
         context: Any,
         settings: dict[str, Any],
         warnings: list[str],
-        material_writer: Any,
-        scale_to_meters: bool = False,
+        material_writer: Any
     ):
         super().__init__(file)
         self.context: Any = context
         self.settings: dict[str, Any] = settings
         self.warnings: list[str] = warnings
         self.material_writer: Any = material_writer
-        self.scale_to_meters: bool = scale_to_meters
         self.scene: Any = self.context.scene
         self.node_settings: list['NodeSettings'] = []
         self.ac_objects: list[re.Pattern] = []
@@ -109,8 +105,6 @@ class NodeWriter(KN5Writer):
                 msg += f"\tRename it to '__{obj.name}' if you do not want to export it."
                 self.warnings.append(msg)
             matrix = convert_matrix(obj.matrix_local)
-            if self.scale_to_meters:
-                matrix @= MAT_SCALE_M
             for child in obj.children:
                 if not child.name.startswith('__'):
                     num_children += 1
@@ -139,8 +133,6 @@ class NodeWriter(KN5Writer):
             transform_matrix: Matrix = Matrix()
             if obj.parent:
                 transform_matrix = convert_matrix(obj.parent.matrix_world.inverted())
-                if self.scale_to_meters:
-                    transform_matrix @= MAT_SCALE_M
             node_data['transform'] = transform_matrix
             self._write_base_node_data(node_data)
         node_properties: 'NodeProperties' = NodeProperties(obj)
@@ -255,8 +247,6 @@ class NodeWriter(KN5Writer):
                         loop: Any = mesh_loops[loop_index]
                         local_position: Vector = matrix @ mesh_vertices[loop.vertex_index].co
                         converted_position: Vector = convert_vector3(local_position)
-                        if self.scale_to_meters:
-                            converted_position *= 0.01
                         converted_normal: Vector = convert_vector3(loop.normal)
                         converted_tangent: Vector = convert_vector3(loop.tangent)
 

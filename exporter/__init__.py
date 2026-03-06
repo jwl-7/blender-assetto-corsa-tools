@@ -70,8 +70,7 @@ class KN5FileWriter(KN5Writer):
         context: bpy.types.Context,
         settings: dict[str, Any],
         filepath: str,
-        warnings: list[str],
-        scale_to_meters: bool = False,
+        warnings: list[str]
     ):
         super().__init__(file)
         self.context: bpy.types.Context = context
@@ -79,7 +78,6 @@ class KN5FileWriter(KN5Writer):
         self.warnings: list[str] = warnings
         self.filepath: str = filepath
         self.file_version: int = 5
-        self.scale_to_meters: bool = scale_to_meters
 
     def write(self):
         self.file.write(KN5_HEADER_BYTES)
@@ -105,8 +103,7 @@ class KN5FileWriter(KN5Writer):
             self.context,
             self.settings,
             self.warnings,
-            material_writer,
-            self.scale_to_meters,
+            material_writer
         ).write()
 
 
@@ -116,15 +113,8 @@ class ExportKN5(bpy.types.Operator, ExportHelper):
     bl_label = 'Export KN5'
     filename_ext = '.kn5'
 
-    scale_to_meters: BoolProperty(
-        name='Scale to Meters',
-        description='Convert unit scale from Centimeters -> Meters (0.01 scale)',
-        default=False
-    )
-
     def draw(self, context: bpy.types.Context):
         layout: bpy.types.UILayout = self.layout
-        layout.prop(self, 'scale_to_meters')
 
     def execute(self, context: bpy.types.Context) -> set:
         warnings: list[str] = []
@@ -136,8 +126,7 @@ class ExportKN5(bpy.types.Operator, ExportHelper):
                     context,
                     settings,
                     self.filepath,
-                    warnings,
-                    self.scale_to_meters
+                    warnings
                 ).write()
                 bpy.ops.kn5.report_message(
                     'INVOKE_DEFAULT',
@@ -178,18 +167,12 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
     )
     reverse_animation: BoolProperty(name='Reverse Animation', default=False)
     export_base_pos: BoolProperty(name='Export driver_base_pos.knh', default=False)
-    scale_to_meters: BoolProperty(
-        name='Scale to Meters',
-        description='Convert unit scale from Centimeters -> Meters (0.01 scale)',
-        default=False
-    )
 
     def draw(self, context: bpy.types.Context):
         layout: bpy.types.UILayout = self.layout
         layout.prop(self, 'selection_type')
         layout.prop(self, 'reverse_animation')
         layout.prop(self, 'export_base_pos')
-        layout.prop(self, 'scale_to_meters')
 
     def execute(self, context: bpy.types.Context) -> set:
         warnings: list[str] = []
@@ -201,8 +184,7 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
                         context,
                         self.filepath,
                         self.selection_type,
-                        warnings,
-                        self.scale_to_meters,
+                        warnings
                     ).write()
                 else:
                     KSAnimWriter(
@@ -211,8 +193,7 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
                         self.filepath,
                         self.selection_type,
                         self.reverse_animation,
-                        warnings,
-                        self.scale_to_meters,
+                        warnings
                     ).write()
             bpy.ops.kn5.report_message(
                 'INVOKE_DEFAULT',
