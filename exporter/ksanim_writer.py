@@ -88,7 +88,7 @@ class KSAnimWriter(KN5Writer):
     def _add_frame(self, obj: bpy.types.Object):
         mat = obj.matrix_local.copy()
         co, rot, sc = mat.decompose()
-        rotation = [rotation.x, rotation.y, rotation.z, rotation.w]
+        rotation = [rot.x, rot.y, rot.z, rot.w]
         position = [co.x, co.y, co.z]
         scale = list(sc)
         self.objects[obj.name]['frames'].append(rotation + position + scale)
