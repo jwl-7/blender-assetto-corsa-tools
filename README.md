@@ -8,18 +8,17 @@ This fork of the KN5 exporter is made to support the exporting of cars instead o
 * Export blender car -> kn5
 * Export blender track -> kn5
 * Export blender anim -> ksanim
+* Import ksEditor Persistence -> settings json
 * Blender mesh objects as kn5 geometry
 * Blender image textures as kn5 textures
 * Set material and object settings with JSON
 * Texture mapping with UV maps or flat mapping
 * Multiple materials per object
 * Bundle texture folder
-* Utility converter for converting persistence ini -> settings file
 
 ## Technical
 
 * Automatically search for textures defined in `settings.json`, even when they are not bound to the node in blender
-* Utility converter reads and converts persistence `fbx.ini` -> `settings.json`
 * Hardcoded texture slots to ensure proper mapping
 * Tangent space calculations ensures cars have proper reflections
 * Bounding sphere calculation updated for cars
@@ -39,11 +38,16 @@ This fork of the KN5 exporter is made to support the exporting of cars instead o
 ## Usage
 
 ### Cars / Tracks
-1. Create `settings.json` file with [utility converter](./utils/fbx_ini_to_settings_json.py)
-2. Make sure `settings.json` and the `/texture` folder are in the same directory that the `kn5` will be exported
-3. Open Blender
-3. Go to `File` > `Export` > `Assetto Corsa 3D (.kn5)`
-4. Select directory with generated `settings.json` and export
+1. Open up `ksEditor`
+2. Go to `File` > `Open FBX` and load car FBX
+3. Go to `File` > `Save Persistence` (generates `fbx.ini`)
+4. Close `ksEditor`
+5. Open `Blender`
+6. Go to `File` > `Import` > `Assetto Corsa Persistence (fbx.ini) -> Settings (.json)` and select generated `fbx.ini`
+7. Ensure the following are in the same folder where the `KN5` will be exported:
+  - `settings.json`
+  - `/texture` folder
+8. Go to `File` > `Export` > `Assetto Corsa 3D (.kn5)`
 
 ### Animations
 1. Import `.fbx`
