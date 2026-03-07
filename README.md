@@ -29,7 +29,7 @@ This fork of the KN5 exporter is made to support the exporting of cars instead o
 
 ## Install
 
-1. Download the `assetto_corsa_tools.zip` from the [latest Release](https://github.com/jwl-7/blender-assetto-corsa-tools/releases/latest).
+1. Download the `blender_assetto_corsa_tools.zip` from the [latest Release](https://github.com/jwl-7/blender-assetto-corsa-tools/releases/latest).
 2. Start Blender
 3. Go to `Edit` > `Preferences` > `Add-ons`
 4. Click `Install...` and select the downloaded zip file
