@@ -1,5 +1,5 @@
 def rename_bones(obj, find: str, replace: str) -> str:
-    """Rename rig bones from find to replace. Returns result message."""
+    """Renames rig bones from find to replace."""
     total = 0
 
     for bone in obj.data.bones:

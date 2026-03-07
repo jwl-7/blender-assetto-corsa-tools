@@ -2,7 +2,7 @@ import bpy
 
 
 def rename_anim_bones(find: str, replace: str) -> str:
-    """Rename fcurve data paths across all actions. Returns result message."""
+    """Rename fcurve data paths across all actions."""
     total = 0
 
     for action in bpy.data.actions:

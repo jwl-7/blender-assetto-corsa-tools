@@ -1,17 +1,13 @@
 def add_acroot(obj) -> tuple[str, bool]:
-    """Add acroot bone as parent of Hips. Returns (message, success)."""
-    hips = (
-        obj.data.edit_bones.get('mixamorig:Hips') or
-        obj.data.edit_bones.get('mixamorig7:Hips') or
-        obj.data.edit_bones.get('Hips')
-    )
+    """Add acroot bone as parent of Hips."""
+    root = next((b for b in obj.data.edit_bones if b.parent is None), None)
 
     acroot = obj.data.edit_bones.new('acroot')
     acroot.head = (0, 0, 0)
     acroot.tail = (0, 0.1, 0)
 
-    if hips:
-        hips.parent = acroot
-        return f'acroot bone added and parented to: {hips.name}', True
+    if root:
+        root.parent = acroot
+        return f'acroot bone added and parented to: {root.name}', True
 
-    return 'acroot bone added but Hips bone not found.\nPlease parent it manually.', False
+    return 'acroot bone added but no root bone found.\nPlease parent it manually.', False

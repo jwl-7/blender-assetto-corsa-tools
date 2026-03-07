@@ -53,8 +53,18 @@ class CopyClipboardButtonOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class MixamoToolsSubmenu(bpy.types.Menu):
+    bl_label = 'Mixamo Tools'
+    bl_idname = 'MIXAMO_MT_submenu'
+
+    def draw(self, context: bpy.types.Context):
+        self.layout.operator(AddAcroot.bl_idname, text='Add acroot Bone')
+        self.layout.operator(RenameMixamoBones.bl_idname, text='Rename Rig Bones')
+        self.layout.operator(RenameMixamoAnimBones.bl_idname, text='Rename Animation Bones')
+
+
 class AddAcroot(bpy.types.Operator):
-    """Add an acroot bone as parent of Hips (required for Assetto Corsa pedestrians)"""
+    """Adds an acroot bone as parent of Hips/"""
     bl_idname = 'mixamo.add_acroot'
     bl_label = 'Add acroot Bone'
     bl_options = {'REGISTER', 'UNDO'}
@@ -96,7 +106,7 @@ class AddAcroot(bpy.types.Operator):
 
 
 class RenameMixamoBones(bpy.types.Operator):
-    """Rename armature bones from find to replace"""
+    """Renames armature bones from find to replace."""
     bl_idname = 'mixamo.rename_rig_bones'
     bl_label = 'Rename Mixamo Rig Bones'
     bl_options = {'REGISTER', 'UNDO'}
@@ -134,7 +144,7 @@ class RenameMixamoBones(bpy.types.Operator):
 
 
 class RenameMixamoAnimBones(bpy.types.Operator):
-    """Rename animation fcurve data paths from find to replace"""
+    """Renames animation fcurve data paths from find to replace."""
     bl_idname = 'mixamo.rename_anim_bones'
     bl_label = 'Rename Mixamo Anim Bones'
     bl_options = {'REGISTER', 'UNDO'}
@@ -161,16 +171,15 @@ class RenameMixamoAnimBones(bpy.types.Operator):
 
 
 def menu_func(self, context: bpy.types.Context):
-    """Adds Mixamo tools to the Armature menu."""
+    """Adds Mixamo submenu to the Armature menu."""
     self.layout.separator()
-    self.layout.operator(AddAcroot.bl_idname, text='Add acroot Bone (AC Pedestrian)')
-    self.layout.operator(RenameMixamoBones.bl_idname, text='Rename Mixamo Rig Bones (AC Pedestrian)')
-    self.layout.operator(RenameMixamoAnimBones.bl_idname, text='Rename Mixamo Anim Bones (AC Pedestrian)')
+    self.layout.menu(MixamoToolsSubmenu.bl_idname, text='Assetto Corsa Mixamo')
 
 
 REGISTER_CLASSES: tuple = (
     ReportOperator,
     CopyClipboardButtonOperator,
+    MixamoToolsSubmenu,
     AddAcroot,
     RenameMixamoBones,
     RenameMixamoAnimBones,
@@ -180,10 +189,10 @@ REGISTER_CLASSES: tuple = (
 def register():
     for cls in REGISTER_CLASSES:
         bpy.utils.register_class(cls)
-    bpy.types.VIEW3D_MT_armature.append(menu_func)
+    bpy.types.VIEW3D_MT_edit_armature.append(menu_func)
 
 
 def unregister():
-    bpy.types.VIEW3D_MT_armature.remove(menu_func)
+    bpy.types.VIEW3D_MT_edit_armature.remove(menu_func)
     for cls in reversed(REGISTER_CLASSES):
         bpy.utils.unregister_class(cls)
