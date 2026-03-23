@@ -34,6 +34,7 @@ This fork of the KN5 exporter is made to support the exporting of cars instead o
 3. Go to `Edit` > `Preferences` > `Add-ons`
 4. Click `Install...` and select the downloaded zip file
 5. Enable the `Assetto Corsa (.kn5) (.ks)` addon
+6. Press `N` and then go to `Assetto Corsa` tab
 
 ## Usage
 
@@ -43,11 +44,10 @@ This fork of the KN5 exporter is made to support the exporting of cars instead o
 3. Go to `File` > `Save Persistence` (generates `fbx.ini`)
 4. Close `ksEditor`
 5. Open `Blender`
-6. Go to `File` > `Import` > `Assetto Corsa Persistence (fbx.ini) -> Settings (.json)` and select generated `fbx.ini`
-7. Ensure the following are in the same folder where the `KN5` will be exported:
+6. Ensure the following are in the same folder where the `KN5` will be exported:
   - `settings.json`
   - `/texture` folder
-8. Go to `File` > `Export` > `Assetto Corsa 3D (.kn5)`
+7. Go to `File` > `Export` > `Assetto Corsa 3D (.kn5)`
 
 ### Animations
 1. Import `.fbx`
