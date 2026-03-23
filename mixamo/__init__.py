@@ -53,16 +53,6 @@ class CopyClipboardButtonOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class MixamoToolsSubmenu(bpy.types.Menu):
-    bl_label = 'Mixamo Tools'
-    bl_idname = 'MIXAMO_MT_submenu'
-
-    def draw(self, context: bpy.types.Context):
-        self.layout.operator(AddAcroot.bl_idname, text='Add acroot Bone')
-        self.layout.operator(RenameMixamoBones.bl_idname, text='Rename Rig Bones')
-        self.layout.operator(RenameMixamoAnimBones.bl_idname, text='Rename Animation Bones')
-
-
 class AddAcroot(bpy.types.Operator):
     """Adds an acroot bone as parent of Hips/"""
     bl_idname = 'mixamo.add_acroot'
@@ -170,16 +160,9 @@ class RenameMixamoAnimBones(bpy.types.Operator):
         self.layout.prop(self, 'replace')
 
 
-def menu_func(self, context: bpy.types.Context):
-    """Adds Mixamo submenu to the Armature menu."""
-    self.layout.separator()
-    self.layout.menu(MixamoToolsSubmenu.bl_idname, text='Assetto Corsa Mixamo')
-
-
 REGISTER_CLASSES: tuple = (
     ReportOperator,
     CopyClipboardButtonOperator,
-    MixamoToolsSubmenu,
     AddAcroot,
     RenameMixamoBones,
     RenameMixamoAnimBones,
@@ -189,10 +172,8 @@ REGISTER_CLASSES: tuple = (
 def register():
     for cls in REGISTER_CLASSES:
         bpy.utils.register_class(cls)
-    bpy.types.VIEW3D_MT_edit_armature.append(menu_func)
 
 
 def unregister():
-    bpy.types.VIEW3D_MT_edit_armature.remove(menu_func)
     for cls in reversed(REGISTER_CLASSES):
         bpy.utils.unregister_class(cls)

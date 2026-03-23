@@ -1,7 +1,6 @@
-import json
 import os
 import bpy
-import math
+import glob
 from typing import Any
 from mathutils import Matrix, Quaternion, Vector
 
@@ -77,10 +76,16 @@ def get_active_material_texture_slot(material: bpy.types.Material) -> bpy.types.
 
 
 def read_settings(file: str) -> dict[str, Any]:
-    """Reads settings.json relative to the export file path."""
+    """Reads material settings directly from a persistence file (fbx.ini) in the export directory."""
+    from ..importer.fbxini_reader import FBXINIReader
     full_path: str = os.path.abspath(file)
     dir_name: str = os.path.dirname(full_path)
-    settings_path: str = os.path.join(dir_name, 'settings.json')
-    if not os.path.exists(settings_path):
+
+    ini_matches: list[str] = glob.glob(os.path.join(dir_name, '*.ini'))
+    if not ini_matches:
         return {}
-    return json.loads(open(settings_path, 'r').read())
+
+    reader = FBXINIReader(ini_matches[0])
+    reader.parse_ini()
+    reader.convert_sections_to_json()
+    return reader.json_data

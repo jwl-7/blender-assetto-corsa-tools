@@ -6,7 +6,10 @@ This provides the configuration for assetto corsa tools to apply all the correct
 
 import json
 import re
+import bpy
 from typing import Any
+from ..ui.materials_ui import MaterialProperties
+
 
 class FBXINIReader:
     def __init__(self, filepath: str):
@@ -128,6 +131,38 @@ class FBXINIReader:
 
         # print(f'Success! Processed {applied_mats} materials and {applied_nodes} nodes.')
         self.json_data = data
+
+    def apply_to_scene(self) -> int:
+        """Applies parsed material settings directly to matching Blender materials.
+
+        Matches by material name. Returns the number of materials applied.
+        """
+        applied = 0
+        for mat_name, mat_data in self.json_data.get('materials', {}).items():
+            bl_mat = bpy.data.materials.get(mat_name)
+            if bl_mat is None:
+                continue
+
+            ac_mat: MaterialProperties = bl_mat.assettoCorsa
+            ac_mat.shaderName = mat_data.get('shaderName', 'ksPerPixel')
+            ac_mat.alphaBlendMode = str({'Opaque': 0, 'AlphaBlend': 1, 'AlphaToCoverage': 2}.get(
+                mat_data.get('alphaBlendMode', 'Opaque'), 0))
+            ac_mat.alphaTested = mat_data.get('alphaTested', False)
+            ac_mat.depthMode = str({'DepthNormal': 0, 'DepthNoWrite': 1, 'DepthOff': 2}.get(
+                mat_data.get('depthMode', 'DepthNormal'), 0))
+
+            ac_mat.shaderProperties.clear()
+            for prop_name, prop_vals in mat_data.get('properties', {}).items():
+                item = ac_mat.shaderProperties.add()
+                item.name = prop_name
+                item.valueA = prop_vals.get('valueA', 0.0)
+                item.valueB = prop_vals.get('valueB', [0.0, 0.0])
+                item.valueC = prop_vals.get('valueC', [0.0, 0.0, 0.0])
+                item.valueD = prop_vals.get('valueD', [0.0, 0.0, 0.0, 0.0])
+
+            applied += 1
+
+        return applied
 
     def save_json(self, json_path: str):
         """Saves the converted JSON data to a file."""

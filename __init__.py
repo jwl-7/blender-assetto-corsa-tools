@@ -1,4 +1,4 @@
-from . import exporter, importer, mixamo, ui
+from . import exporter, importer, mixamo, character, ui
 from .utils import register_recursive, unregister_recursive
 
 
@@ -19,6 +19,7 @@ REGISTER_CLASSES = (
     exporter,
     importer,
     mixamo,
+    character,
     ui
 )
 

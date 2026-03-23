@@ -132,7 +132,7 @@ class ExportKN5(bpy.types.Operator, ExportHelper):
                     'INVOKE_DEFAULT',
                     is_error=False,
                     title='Exported successfully',
-                    message=os.linesep.join(warnings)
+                    message=os.linesep.join(warnings) if warnings else 'Export completed successfully.'
                 )
         except:
             error: str = traceback.format_exc()
@@ -199,7 +199,7 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
                 'INVOKE_DEFAULT',
                 is_error=False,
                 title='Exported successfully',
-                message=os.linesep.join(warnings)
+                message=os.linesep.join(warnings) if warnings else 'Export completed successfully.'
             )
         except:
             error: str = traceback.format_exc()
