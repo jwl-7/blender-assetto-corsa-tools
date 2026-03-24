@@ -76,53 +76,10 @@ class ReportOperator(bpy.types.Operator):
             row.label(text=line)
 
 
-class AC_PT_MixamoPanel(bpy.types.Panel):
-    """N panel for Mixamo rigging tools."""
-    bl_label = 'Mixamo Tools'
-    bl_idname = 'AC_PT_mixamo'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Assetto Corsa'
-
-    def draw(self, context: bpy.types.Context):
-        self.layout.operator('mixamo.add_acroot', text='Add acroot Bone')
-        self.layout.operator('mixamo.rename_rig_bones', text='Rename Rig Bones')
-        self.layout.operator('mixamo.rename_anim_bones', text='Rename Animation Bones')
-
-
-class AC_PT_CharacterPanel(bpy.types.Panel):
-    """N panel for character tools."""
-    bl_label = 'Character Tools'
-    bl_idname = 'AC_PT_character'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Assetto Corsa'
-
-    def draw(self, context: bpy.types.Context):
-        self.layout.operator(CharacterProcessFBXINI.bl_idname, text='Configure Persistence File (fbx.ini)')
-        self.layout.operator(TextureReportOperator.bl_idname, text='Log texture mapping')
-
-
-class AC_PT_ExportPanel(bpy.types.Panel):
-    """N panel for export tools."""
-    bl_label = 'Export Tools'
-    bl_idname = 'AC_PT_export'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Assetto Corsa'
-
-    def draw(self, context: bpy.types.Context):
-        self.layout.operator('exporter.kn5', text='Export KN5')
-        self.layout.operator('exporter.ksanim', text='Export KSANIM')
-
-
 REGISTER_CLASSES: tuple = (
     ReportOperator,
     CharacterProcessFBXINI,
-    TextureReportOperator,
-    AC_PT_MixamoPanel,
-    AC_PT_CharacterPanel,
-    AC_PT_ExportPanel,
+    TextureReportOperator
 )
 
 
