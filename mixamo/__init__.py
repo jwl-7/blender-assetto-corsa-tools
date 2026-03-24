@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import BoolProperty, StringProperty
-from . import acroot_adder, bone_renamer, anim_bone_renamer
+from . import acroot_adder, bone_renamer
 
 
 class ReportOperator(bpy.types.Operator):
@@ -101,8 +101,8 @@ class RenameMixamoBones(bpy.types.Operator):
     bl_label = 'Rename Mixamo Rig Bones'
     bl_options = {'REGISTER', 'UNDO'}
 
-    find: StringProperty(name='Find', default='mixamorig:')
-    replace: StringProperty(name='Replace', default='mixamorig:')
+    find: StringProperty(name='Find', default='mixamorig')
+    replace: StringProperty(name='Replace', default='mixamorig')
 
     def execute(self, context: bpy.types.Context) -> set:
         obj = context.active_object
@@ -132,40 +132,11 @@ class RenameMixamoBones(bpy.types.Operator):
         self.layout.prop(self, 'find')
         self.layout.prop(self, 'replace')
 
-
-class RenameMixamoAnimBones(bpy.types.Operator):
-    """Renames animation fcurve data paths from find to replace."""
-    bl_idname = 'mixamo.rename_anim_bones'
-    bl_label = 'Rename Mixamo Anim Bones'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    find: StringProperty(name='Find', default='mixamorig:')
-    replace: StringProperty(name='Replace', default='mixamorig:')
-
-    def execute(self, context: bpy.types.Context) -> set:
-        msg = anim_bone_renamer.rename_anim_bones(self.find, self.replace)
-        bpy.ops.mixamo.report_message(
-            'INVOKE_DEFAULT',
-            is_error=False,
-            title='Rename Anim Bones',
-            message=msg
-        )
-        return {'FINISHED'}
-
-    def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set:
-        return context.window_manager.invoke_props_dialog(self)
-
-    def draw(self, context: bpy.types.Context):
-        self.layout.prop(self, 'find')
-        self.layout.prop(self, 'replace')
-
-
 REGISTER_CLASSES: tuple = (
     ReportOperator,
     CopyClipboardButtonOperator,
     AddAcroot,
-    RenameMixamoBones,
-    RenameMixamoAnimBones,
+    RenameMixamoBones
 )
 
 
