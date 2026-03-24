@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import BoolProperty, StringProperty
-from . import acroot_adder, bone_renamer
+from . import acroot_adder, bone_renamer, scale_fixer
 
 
 class ReportOperator(bpy.types.Operator):
@@ -66,7 +66,7 @@ class AddAcroot(bpy.types.Operator):
             bpy.ops.mixamo.report_message(
                 'INVOKE_DEFAULT',
                 is_error=True,
-                title='Add acroot Failed',
+                title='Add acroot failed',
                 message='No armature selected. Please select an armature and try again.'
             )
             return {'CANCELLED'}
@@ -77,7 +77,7 @@ class AddAcroot(bpy.types.Operator):
             bpy.ops.mixamo.report_message(
                 'INVOKE_DEFAULT',
                 is_error=True,
-                title='Add acroot Failed',
+                title='Add acroot failed',
                 message='acroot bone already exists.'
             )
             bpy.ops.object.mode_set(mode='OBJECT')
@@ -111,7 +111,7 @@ class RenameMixamoBones(bpy.types.Operator):
             bpy.ops.mixamo.report_message(
                 'INVOKE_DEFAULT',
                 is_error=True,
-                title='Rename Bones Failed',
+                title='Rename bones failed',
                 message='No armature selected. Please select an armature and try again.'
             )
             return {'CANCELLED'}
@@ -120,7 +120,7 @@ class RenameMixamoBones(bpy.types.Operator):
         bpy.ops.mixamo.report_message(
             'INVOKE_DEFAULT',
             is_error=False,
-            title='Rename Bones',
+            title='Rename bones',
             message=msg
         )
         return {'FINISHED'}
@@ -132,11 +132,41 @@ class RenameMixamoBones(bpy.types.Operator):
         self.layout.prop(self, 'find')
         self.layout.prop(self, 'replace')
 
+
+class FixMixamoScale(bpy.types.Operator):
+    """Apply scale of 1.000 to armature without messing up animation."""
+    bl_idname = 'mixamo.fix_scale'
+    bl_label = 'Fix Mixamo Scale'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context: bpy.types.Context) -> set:
+        obj = context.active_object
+
+        if not obj or obj.type != 'ARMATURE':
+            bpy.ops.mixamo.report_message(
+                'INVOKE_DEFAULT',
+                is_error=True,
+                title='Fix scale failed',
+                message='No armature selected. Please select an armature and try again.'
+            )
+            return {'CANCELLED'}
+
+        msg = scale_fixer.fix_scale(obj)
+        bpy.ops.mixamo.report_message(
+            'INVOKE_DEFAULT',
+            is_error=False,
+            title='Fix scale success',
+            message=msg
+        )
+        return {'FINISHED'}
+
+
 REGISTER_CLASSES: tuple = (
     ReportOperator,
     CopyClipboardButtonOperator,
     AddAcroot,
-    RenameMixamoBones
+    RenameMixamoBones,
+    FixMixamoScale
 )
 
 
