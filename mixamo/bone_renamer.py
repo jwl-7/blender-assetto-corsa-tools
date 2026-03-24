@@ -1,6 +1,7 @@
 import bpy
 from typing import Any
 
+
 def rename_rig_bones(obj: Any, find: str, replace: str) -> str:
     """Renames rig bones.."""
     total = 0

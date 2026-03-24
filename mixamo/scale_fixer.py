@@ -1,7 +1,6 @@
 import bpy
 from typing import Any
 
-obj = bpy.context.object
 
 def fix_scale(obj: Any) -> str:
     """Fixes mixamo scale from 0.010 -> 1.000 with moving character mesh around during the animation."""
