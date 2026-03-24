@@ -8,7 +8,7 @@ This fork of the KN5 exporter is made to support the exporting of cars instead o
 * Export blender car -> kn5
 * Export blender track -> kn5
 * Export blender anim -> ksanim
-* Import ksEditor Persistence -> settings json
+* Process ksEditor Persistence on export
 * Blender mesh objects as kn5 geometry
 * Blender image textures as kn5 textures
 * Set material and object settings with JSON
