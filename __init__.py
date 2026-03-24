@@ -4,7 +4,7 @@ from .utils import register_recursive, unregister_recursive
 
 bl_info = {
     'name':        'Assetto Corsa (.kn5) (.ksanim)',
-    'version':     (1, 0, 4),
+    'version':     (1, 0, 5),
     'author':      'Thomas Hagnhofer, Paul Greveson, N Murdoch, JWL',
     'blender':     (3, 0, 0),
     'description': 'Export to Assetto Corsa KN5 and KSANIM formats',
