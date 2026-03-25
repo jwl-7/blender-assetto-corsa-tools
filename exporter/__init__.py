@@ -167,12 +167,14 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
     )
     reverse_animation: BoolProperty(name='Reverse Animation', default=False)
     export_base_pos: BoolProperty(name='Export driver_base_pos.knh', default=False)
+    fix_bone_rotation: BoolProperty(name='Fix bone rotation', default=True)
 
     def draw(self, context: bpy.types.Context):
         layout: bpy.types.UILayout = self.layout
         layout.prop(self, 'selection_type')
         layout.prop(self, 'reverse_animation')
         layout.prop(self, 'export_base_pos')
+        layout.prop(self, 'fix_bone_rotation')
 
     def execute(self, context: bpy.types.Context) -> set:
         warnings: list[str] = []
@@ -184,6 +186,7 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
                         context,
                         self.filepath,
                         self.selection_type,
+                        self.fix_bone_rotation,
                         warnings
                     ).write()
                 else:
@@ -193,6 +196,7 @@ class ExportKSAnim(bpy.types.Operator, ExportHelper):
                         self.filepath,
                         self.selection_type,
                         self.reverse_animation,
+                        self.fix_bone_rotation,
                         warnings
                     ).write()
             bpy.ops.kn5.report_message(

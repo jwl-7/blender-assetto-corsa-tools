@@ -69,6 +69,7 @@ class KSAnimWriter(KN5Writer):
         filepath: str,
         selection_type: str,
         reverse_animation: bool,
+        fix_bone_rotation: bool,
         warnings: list[str]
     ):
         super().__init__(file)
@@ -76,6 +77,7 @@ class KSAnimWriter(KN5Writer):
         self.filepath: str = filepath
         self.selection_type: str = selection_type
         self.reverse_animation: bool = reverse_animation
+        self.fix_bone_rotation: bool = fix_bone_rotation
         self.warnings: list[str] = warnings
         self.objects: dict[str, dict[str, Any]] = {}
         self.draw_order: list[str] = []
@@ -95,11 +97,11 @@ class KSAnimWriter(KN5Writer):
 
     def _add_bone_frame(self, bone: bpy.types.PoseBone):
         bmat = bone.matrix.copy()
-        if bone.name in DRIVER_BONES or bone.name == 'acroot':
+        if self.fix_bone_rotation and bone.name in DRIVER_BONES or bone.name == 'acroot':
             bmat @= MAT_ROTATE_X_180
         if bone.parent:
             pmat = bone.parent.matrix.copy()
-            if bone.parent.name in DRIVER_BONES or bone.name == 'acroot':
+            if self.fix_bone_rotation and bone.parent.name in DRIVER_BONES or bone.name == 'acroot':
                 pmat @= MAT_ROTATE_X_180
             mat = pmat.inverted() @ bmat
         else:
@@ -185,12 +187,14 @@ class KNHWriter(KN5Writer):
         context: bpy.types.Context,
         filepath: str,
         selection_type: str,
+        fix_bone_rotation: bool,
         warnings: list[str]
     ):
         super().__init__(file)
         self.context: bpy.types.Context = context
         self.filepath: str = filepath
         self.selection_type: str = selection_type
+        self.fix_bone_rotation: bool = fix_bone_rotation
         self.warnings: list[str] = warnings
 
     def write(self):
@@ -226,12 +230,12 @@ class KNHWriter(KN5Writer):
         self.write_string(bone.name)
 
         bmat = bone.matrix.copy()
-        if bone.name in DRIVER_BONES or bone.name == 'acroot':
+        if self.fix_bone_rotation and bone.name in DRIVER_BONES or bone.name == 'acroot':
             bmat @= MAT_ROTATE_X_180
 
         if bone.parent:
             pmat = bone.parent.matrix.copy()
-            if bone.parent.name in DRIVER_BONES or bone.name == 'acroot':
+            if self.fix_bone_rotation and bone.parent.name in DRIVER_BONES or bone.name == 'acroot':
                 pmat @= MAT_ROTATE_X_180
             mat = (pmat.inverted() @ bmat).transposed()
         else:
