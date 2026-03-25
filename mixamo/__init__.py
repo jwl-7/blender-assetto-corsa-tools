@@ -14,10 +14,10 @@ class ReportOperator(bpy.types.Operator):
 
     def execute(self, context: bpy.types.Context) -> set:
         if self.is_error:
-            self.report({'WARNING'}, self.message)
+            self.report({ 'WARNING' }, self.message)
         else:
-            self.report({'INFO'}, self.message)
-        return {'FINISHED'}
+            self.report({ 'INFO' }, self.message)
+        return { 'FINISHED' }
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set:
         self.execute(context)
@@ -46,18 +46,18 @@ class CopyClipboardButtonOperator(bpy.types.Operator):
 
     def execute(self, context: bpy.types.Context) -> set:
         context.window_manager.clipboard = self.content
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set:
         self.execute(context)
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
 
 class AddAcroot(bpy.types.Operator):
     """Adds an acroot bone as parent of Hips/"""
     bl_idname = 'mixamo.add_acroot'
     bl_label = 'Add acroot Bone'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = { 'REGISTER', 'UNDO' }
 
     def execute(self, context: bpy.types.Context) -> set:
         obj = context.active_object
@@ -69,7 +69,7 @@ class AddAcroot(bpy.types.Operator):
                 title='Add acroot failed',
                 message='No armature selected. Please select an armature and try again.'
             )
-            return {'CANCELLED'}
+            return { 'CANCELLED' }
 
         bpy.ops.object.mode_set(mode='EDIT')
 
@@ -81,7 +81,7 @@ class AddAcroot(bpy.types.Operator):
                 message='acroot bone already exists.'
             )
             bpy.ops.object.mode_set(mode='OBJECT')
-            return {'CANCELLED'}
+            return { 'CANCELLED' }
 
         msg, success = acroot_adder.add_acroot(obj)
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -92,14 +92,14 @@ class AddAcroot(bpy.types.Operator):
             title='Add acroot',
             message=msg
         )
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
 
 class RenameMixamoBones(bpy.types.Operator):
     """Renames armature bones from find to replace."""
     bl_idname = 'mixamo.rename_rig_bones'
     bl_label = 'Rename Mixamo Rig Bones'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = { 'REGISTER', 'UNDO' }
 
     find: StringProperty(name='Find', default='mixamorig')
     replace: StringProperty(name='Replace', default='mixamorig')
@@ -114,7 +114,7 @@ class RenameMixamoBones(bpy.types.Operator):
                 title='Rename bones failed',
                 message='No armature selected. Please select an armature and try again.'
             )
-            return {'CANCELLED'}
+            return { 'CANCELLED' }
 
         msg = bone_renamer.rename_bones(obj, self.find, self.replace)
         bpy.ops.mixamo.report_message(
@@ -123,7 +123,7 @@ class RenameMixamoBones(bpy.types.Operator):
             title='Rename bones',
             message=msg
         )
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set:
         return context.window_manager.invoke_props_dialog(self)
@@ -137,7 +137,7 @@ class FixMixamoScale(bpy.types.Operator):
     """Apply scale of 1.000 to armature without messing up animation."""
     bl_idname = 'mixamo.fix_scale'
     bl_label = 'Fix Mixamo Scale'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = { 'REGISTER', 'UNDO' }
 
     def execute(self, context: bpy.types.Context) -> set:
         obj = context.active_object
@@ -149,7 +149,7 @@ class FixMixamoScale(bpy.types.Operator):
                 title='Fix scale failed',
                 message='No armature selected. Please select an armature and try again.'
             )
-            return {'CANCELLED'}
+            return { 'CANCELLED' }
 
         msg = scale_fixer.fix_scale(obj)
         bpy.ops.mixamo.report_message(
@@ -158,7 +158,7 @@ class FixMixamoScale(bpy.types.Operator):
             title='Fix scale success',
             message=msg
         )
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
 
 REGISTER_CLASSES: tuple = (

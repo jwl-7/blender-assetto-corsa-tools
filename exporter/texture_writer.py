@@ -89,7 +89,7 @@ class TextureWriter(KN5Writer):
                     continue
                 texture_path: str = os.path.join(self.textures_dir, texture_name)
                 if os.path.exists(texture_path):
-                    self.available_textures[texture_name] = {'path': texture_path}
+                    self.available_textures[texture_name] = { 'path': texture_path}
                     self.texture_positions[texture_name] = position
                     position += 1
                 else:

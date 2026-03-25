@@ -3,7 +3,23 @@
 import bpy
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
-from . import ini_fixer, texture_reporter
+from . import armature_rotator, ini_fixer, texture_reporter
+
+
+class ArmatureRotator(bpy.types.Operator):
+    """Add 90° rotation to armature while keeping same orientation."""
+    bl_idname = 'character.rotate_armature'
+    bl_label = 'Add 90° rotation to armature'
+
+    def execute(self, context: bpy.types.Context) -> set:
+        success, msg = armature_rotator.add_armature_rotation(context)
+        bpy.ops.character.report_message(
+            'INVOKE_DEFAULT',
+            is_error=not success,
+            title='Armature Rotation',
+            message=msg
+        )
+        return { 'FINISHED' } if success else { 'CANCELLED' }
 
 
 class CharacterProcessFBXINI(bpy.types.Operator, ImportHelper):
@@ -11,7 +27,7 @@ class CharacterProcessFBXINI(bpy.types.Operator, ImportHelper):
     bl_idname = 'character.fbx_ini'
     bl_label = 'Configure Persistence File (fbx.ini)'
     filename_ext = '.ini'
-    filter_glob: StringProperty(default='*.ini', options={'HIDDEN'})
+    filter_glob: StringProperty(default='*.ini', options={ 'HIDDEN' })
 
     def execute(self, context: bpy.types.Context) -> set:
         success, msg = ini_fixer.fix_ini(self.filepath)
@@ -21,7 +37,7 @@ class CharacterProcessFBXINI(bpy.types.Operator, ImportHelper):
             title='Set Texture Properties',
             message=msg
         )
-        return {'FINISHED'} if success else {'CANCELLED'}
+        return { 'FINISHED' } if success else { 'CANCELLED' }
 
 
 class TextureReportOperator(bpy.types.Operator):
@@ -41,7 +57,7 @@ class TextureReportOperator(bpy.types.Operator):
             title='Texture Report',
             message=report
         )
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
 
 class ReportOperator(bpy.types.Operator):
@@ -55,10 +71,10 @@ class ReportOperator(bpy.types.Operator):
 
     def execute(self, context: bpy.types.Context) -> set:
         if self.is_error:
-            self.report({'WARNING'}, self.message)
+            self.report({ 'WARNING' }, self.message)
         else:
-            self.report({'INFO'}, self.message)
-        return {'FINISHED'}
+            self.report({ 'INFO' }, self.message)
+        return { 'FINISHED' }
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set:
         self.execute(context)
@@ -78,6 +94,7 @@ class ReportOperator(bpy.types.Operator):
 
 REGISTER_CLASSES: tuple = (
     ReportOperator,
+    ArmatureRotator,
     CharacterProcessFBXINI,
     TextureReportOperator
 )

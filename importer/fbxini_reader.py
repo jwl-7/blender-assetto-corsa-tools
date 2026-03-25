@@ -58,7 +58,7 @@ class FBXINIReader:
 
     def convert_sections_to_json(self):
         """Converts INI section data into a structured dictionary for JSON export."""
-        data = {'materials': {}, 'nodes': {}}
+        data = { 'materials': {}, 'nodes': {}}
 
         for section_name, section_data in self.sections.items():
             # materials
@@ -68,7 +68,7 @@ class FBXINIReader:
                 mat_data = {
                     'alphaBlendMode': 'AlphaBlend' if section_data.get('ALPHABLEND') == '1' else 'Opaque',
                     'alphaTested': section_data.get('ALPHATEST') == '1',
-                    'depthMode': {'0': 'DepthNormal', '1': 'DepthNoWrite', '2': 'DepthOff'}.get(
+                    'depthMode': { '0': 'DepthNormal', '1': 'DepthNoWrite', '2': 'DepthOff' }.get(
                         section_data.get('DEPTHMODE', '0'), 'DepthNormal'
                     ),
                     'properties': {},
@@ -104,7 +104,7 @@ class FBXINIReader:
             # nodes
             elif section_name.startswith('model_FBX'):
                 raw_path = section_name.split('.fbx_')[-1].strip(' ]')
-                essential_keys = {'VISIBLE', 'TRANSPARENT', 'CAST_SHADOWS', 'RENDERABLE'}
+                essential_keys = { 'VISIBLE', 'TRANSPARENT', 'CAST_SHADOWS', 'RENDERABLE' }
                 has_real_data = any(key in section_data for key in essential_keys)
 
                 if has_real_data:
@@ -145,10 +145,10 @@ class FBXINIReader:
 
             ac_mat: MaterialProperties = bl_mat.assettoCorsa
             ac_mat.shaderName = mat_data.get('shaderName', 'ksPerPixel')
-            ac_mat.alphaBlendMode = str({'Opaque': 0, 'AlphaBlend': 1, 'AlphaToCoverage': 2}.get(
+            ac_mat.alphaBlendMode = str({ 'Opaque': 0, 'AlphaBlend': 1, 'AlphaToCoverage': 2}.get(
                 mat_data.get('alphaBlendMode', 'Opaque'), 0))
             ac_mat.alphaTested = mat_data.get('alphaTested', False)
-            ac_mat.depthMode = str({'DepthNormal': 0, 'DepthNoWrite': 1, 'DepthOff': 2}.get(
+            ac_mat.depthMode = str({ 'DepthNormal': 0, 'DepthNoWrite': 1, 'DepthOff': 2}.get(
                 mat_data.get('depthMode', 'DepthNormal'), 0))
 
             ac_mat.shaderProperties.clear()

@@ -54,9 +54,9 @@ class MaterialProperties(bpy.types.PropertyGroup):
 class KN5_UL_ShaderPropertiesList(bpy.types.UIList):
     def draw_item(self, context: bpy.types.Context, layout: bpy.types.UILayout, _data: Any, item: ShaderPropertyItem, _icon: int, _active_data: Any, _active_propname: str, _index: int):
         """Draws the individual items in the shader properties list."""
-        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+        if self.layout_type in { 'DEFAULT', 'COMPACT' }:
             layout.prop(item, 'name', text='', emboss=False)
-        elif self.layout_type in {'GRID'}:
+        elif self.layout_type in { 'GRID' }:
             layout.alignment = 'CENTER'
             layout.prop(item, 'name', text='', emboss=False)
 
@@ -120,7 +120,7 @@ class MaterialShaderPropertyAddButton(bpy.types.Operator):
     def execute(self, context: bpy.types.Context) -> set:
         ac_mat: MaterialProperties = context.material.assettoCorsa
         ac_mat.shaderProperties.add()
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
 
 class MaterialShaderPropertyRemoveButton(bpy.types.Operator):
@@ -131,7 +131,7 @@ class MaterialShaderPropertyRemoveButton(bpy.types.Operator):
     def execute(self, context: bpy.types.Context) -> set:
         ac_mat: MaterialProperties = context.material.assettoCorsa
         ac_mat.shaderProperties.remove(ac_mat.shaderPropertiesActive)
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
 
 REGISTER_CLASSES: tuple = (

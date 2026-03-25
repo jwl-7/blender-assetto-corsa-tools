@@ -24,6 +24,7 @@ class ACPanelCharacter(bpy.types.Panel):
     bl_category = 'Assetto Corsa'
 
     def draw(self, context: bpy.types.Context):
+        self.layout.operator('character.rotate_armature', text='Add 90° rotation to armature')
         self.layout.operator('character.fbx_ini', text='Configure Persistence File (fbx.ini)')
         self.layout.operator('character.texture_report', text='Log texture mapping')
 

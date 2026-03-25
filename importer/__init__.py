@@ -13,10 +13,10 @@ class ReportOperator(bpy.types.Operator):
 
     def execute(self, context: bpy.types.Context) -> set:
         if self.is_error:
-            self.report({'WARNING'}, self.message)
+            self.report({ 'WARNING' }, self.message)
         else:
-            self.report({'INFO'}, self.message)
-        return {'FINISHED'}
+            self.report({ 'INFO' }, self.message)
+        return { 'FINISHED' }
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set:
         self.execute(context)
@@ -45,11 +45,11 @@ class CopyClipboardButtonOperator(bpy.types.Operator):
 
     def execute(self, context: bpy.types.Context) -> set:
         context.window_manager.clipboard = self.content
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set:
         self.execute(context)
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
 
 REGISTER_CLASSES: tuple = (

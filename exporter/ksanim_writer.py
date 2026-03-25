@@ -84,7 +84,7 @@ class KSAnimWriter(KN5Writer):
 
     def _add_obj(self, obj: bpy.types.Object | bpy.types.PoseBone):
         name = obj.name
-        self.objects[name] = {'name': name, 'frames': []}
+        self.objects[name] = { 'name': name, 'frames': []}
         self.draw_order.append(name)
 
     def _add_frame(self, obj: bpy.types.Object):
